@@ -91,6 +91,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const verifyCaptcha = async (token) => {
+    try {
+      if (!token) {
+        return {
+          success: false,
+          error: "Missing reCAPTCHA token.",
+        };
+      }
+
+      const data = await authAPI.verifyCaptcha(token);
+      return {
+        success: Boolean(data.success),
+        error: data.error || null,
+        errorCodes: data.error_codes || data.details || null,
+      };
+    } catch (error) {
+      console.error("Captcha verification error:", error);
+      return {
+        success: false,
+        error:
+          error.response?.data?.error ||
+          "reCAPTCHA verification failed. Please try again.",
+        errorCodes:
+          error.response?.data?.error_codes || error.response?.data?.details || null,
+      };
+    }
+  };
+
   const logout = () => {
     // Clear localStorage
     localStorage.removeItem(config.STORAGE_KEYS.TOKEN);
@@ -113,6 +141,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     login,
     register,
+    verifyCaptcha,
     logout,
   };
 

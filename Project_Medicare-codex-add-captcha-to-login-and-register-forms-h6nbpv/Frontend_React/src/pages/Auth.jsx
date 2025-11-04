@@ -1,17 +1,22 @@
 // Auth Page - Login & Register
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import config from "../config";
 import "../styles/Auth.css";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { login, register, isAuthenticated } = useAuth();
+  const { login, register, isAuthenticated, verifyCaptcha } = useAuth();
 
   const [activeTab, setActiveTab] = useState("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const loginCaptchaRef = useRef(null);
+  const registerCaptchaRef = useRef(null);
+  const [loginCaptchaToken, setLoginCaptchaToken] = useState("");
+  const [registerCaptchaToken, setRegisterCaptchaToken] = useState("");
 
   // Login form state
   const [loginForm, setLoginForm] = useState({
@@ -55,29 +60,50 @@ const Auth = () => {
       return;
     }
 
-    // Get reCAPTCHA token
-    if (window.grecaptcha) {
-      const recaptchaToken = window.grecaptcha.getResponse();
-      if (!recaptchaToken) {
-        setError("Please complete the reCAPTCHA");
-        return;
-      }
-      loginForm.recaptcha_token = recaptchaToken;
+    if (!loginCaptchaToken) {
+      setError("Please complete the reCAPTCHA");
+      return;
     }
 
     setLoading(true);
 
     try {
-      const result = await login(loginForm);
+      const captchaCheck = await verifyCaptcha(loginCaptchaToken);
+      if (!captchaCheck.success) {
+        const errorCodes = Array.isArray(captchaCheck.errorCodes)
+          ? captchaCheck.errorCodes.filter(Boolean)
+          : captchaCheck.errorCodes
+          ? [captchaCheck.errorCodes]
+          : [];
+        const fallbackMessage =
+          captchaCheck.error ||
+          (errorCodes.length
+            ? `reCAPTCHA verification failed (${errorCodes.join(", ")})`
+            : "reCAPTCHA verification failed. Please try again.");
+
+        setError(fallbackMessage);
+        setLoginCaptchaToken("");
+        loginCaptchaRef.current?.reset();
+        setLoginForm((prev) => ({ ...prev, recaptcha_token: "" }));
+        return;
+      }
+
+      const result = await login({
+        ...loginForm,
+        recaptcha_token: loginCaptchaToken,
+      });
 
       if (result.success) {
         alert("Login successful! Redirecting to homepage...");
         navigate("/");
+        setLoginCaptchaToken("");
+        loginCaptchaRef.current?.reset();
+        setLoginForm((prev) => ({ ...prev, recaptcha_token: "" }));
       } else {
         setError(result.error);
-        if (window.grecaptcha) {
-          window.grecaptcha.reset();
-        }
+        setLoginCaptchaToken("");
+        loginCaptchaRef.current?.reset();
+        setLoginForm((prev) => ({ ...prev, recaptcha_token: "" }));
       }
       // eslint-disable-next-line no-unused-vars
     } catch (err) {
@@ -136,20 +162,38 @@ const Auth = () => {
       return;
     }
 
-    // Get reCAPTCHA token
-    if (window.grecaptcha) {
-      const recaptchaToken = window.grecaptcha.getResponse();
-      if (!recaptchaToken) {
-        setError("Please complete the reCAPTCHA");
-        return;
-      }
-      registerForm.recaptcha_token = recaptchaToken;
+    if (!registerCaptchaToken) {
+      setError("Please complete the reCAPTCHA");
+      return;
     }
 
     setLoading(true);
 
     try {
-      const result = await register(registerForm);
+      const captchaCheck = await verifyCaptcha(registerCaptchaToken);
+      if (!captchaCheck.success) {
+        const errorCodes = Array.isArray(captchaCheck.errorCodes)
+          ? captchaCheck.errorCodes.filter(Boolean)
+          : captchaCheck.errorCodes
+          ? [captchaCheck.errorCodes]
+          : [];
+        const fallbackMessage =
+          captchaCheck.error ||
+          (errorCodes.length
+            ? `reCAPTCHA verification failed (${errorCodes.join(", ")})`
+            : "reCAPTCHA verification failed. Please try again.");
+
+        setError(fallbackMessage);
+        setRegisterCaptchaToken("");
+        registerCaptchaRef.current?.reset();
+        setRegisterForm((prev) => ({ ...prev, recaptcha_token: "" }));
+        return;
+      }
+
+      const result = await register({
+        ...registerForm,
+        recaptcha_token: registerCaptchaToken,
+      });
 
       if (result.success) {
         alert("Registration successful! Please login to continue.");
@@ -163,14 +207,12 @@ const Auth = () => {
           agreeTerms: false,
           recaptcha_token: "",
         });
-        if (window.grecaptcha) {
-          window.grecaptcha.reset();
-        }
+        setRegisterCaptchaToken("");
+        registerCaptchaRef.current?.reset();
       } else {
         setError(result.error);
-        if (window.grecaptcha) {
-          window.grecaptcha.reset();
-        }
+        setRegisterCaptchaToken("");
+        registerCaptchaRef.current?.reset();
       }
       // eslint-disable-next-line no-unused-vars
     } catch (err) {
@@ -229,6 +271,12 @@ const Auth = () => {
                   onClick={() => {
                     setActiveTab("login");
                     setError("");
+                    setRegisterCaptchaToken("");
+                    registerCaptchaRef.current?.reset();
+                    setRegisterForm((prev) => ({
+                      ...prev,
+                      recaptcha_token: "",
+                    }));
                   }}
                 >
                   Login
@@ -238,6 +286,12 @@ const Auth = () => {
                   onClick={() => {
                     setActiveTab("register");
                     setError("");
+                    setLoginCaptchaToken("");
+                    loginCaptchaRef.current?.reset();
+                    setLoginForm((prev) => ({
+                      ...prev,
+                      recaptcha_token: "",
+                    }));
                   }}
                 >
                   Register
@@ -313,10 +367,24 @@ const Auth = () => {
 
                     {/* reCAPTCHA */}
                     <div className="captcha-container">
-                      <div
-                        className="g-recaptcha"
-                        data-sitekey={config.RECAPTCHA_SITE_KEY}
-                      ></div>
+                      <ReCAPTCHA
+                        ref={loginCaptchaRef}
+                        sitekey={config.RECAPTCHA_SITE_KEY}
+                        onChange={(token) => {
+                          setLoginCaptchaToken(token || "");
+                          setLoginForm((prev) => ({
+                            ...prev,
+                            recaptcha_token: token || "",
+                          }));
+                        }}
+                        onExpired={() => {
+                          setLoginCaptchaToken("");
+                          setLoginForm((prev) => ({
+                            ...prev,
+                            recaptcha_token: "",
+                          }));
+                        }}
+                      />
                     </div>
 
                     <button
@@ -466,10 +534,24 @@ const Auth = () => {
 
                     {/* reCAPTCHA */}
                     <div className="captcha-container">
-                      <div
-                        className="g-recaptcha"
-                        data-sitekey={config.RECAPTCHA_SITE_KEY}
-                      ></div>
+                      <ReCAPTCHA
+                        ref={registerCaptchaRef}
+                        sitekey={config.RECAPTCHA_SITE_KEY}
+                        onChange={(token) => {
+                          setRegisterCaptchaToken(token || "");
+                          setRegisterForm((prev) => ({
+                            ...prev,
+                            recaptcha_token: token || "",
+                          }));
+                        }}
+                        onExpired={() => {
+                          setRegisterCaptchaToken("");
+                          setRegisterForm((prev) => ({
+                            ...prev,
+                            recaptcha_token: "",
+                          }));
+                        }}
+                      />
                     </div>
 
                     <button

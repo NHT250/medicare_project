@@ -35,21 +35,46 @@ def serialize_doc(doc):
     return doc
 
 # Helper function to verify reCAPTCHA
-def verify_recaptcha(recaptcha_token):
+def verify_recaptcha(recaptcha_token, remote_ip=None):
+    if not recaptcha_token:
+        return {
+            'success': False,
+            'error': 'Missing reCAPTCHA token',
+            'error_codes': ['missing-input-response']
+        }
+
     try:
+        payload = {
+            'secret': Config.RECAPTCHA_SECRET_KEY,
+            'response': recaptcha_token
+        }
+        if remote_ip:
+            payload['remoteip'] = remote_ip
+
         response = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
-            data={
-                'secret': Config.RECAPTCHA_SECRET_KEY,
-                'response': recaptcha_token
-            },
+            data=payload,
             timeout=5
         )
         result = response.json()
-        return result.get('success', False)
-    except Exception as e:
+        success = result.get('success', False)
+        error_codes = result.get('error-codes')
+        return {
+            'success': success,
+            'challenge_ts': result.get('challenge_ts'),
+            'hostname': result.get('hostname'),
+            'score': result.get('score'),
+            'action': result.get('action'),
+            'error_codes': error_codes if error_codes else None,
+            'error': None if success else 'reCAPTCHA verification failed'
+        }
+    except requests.RequestException as e:
         print(f'reCAPTCHA verification error: {str(e)}')
-        return False
+        return {
+            'success': False,
+            'error': 'Unable to verify reCAPTCHA token',
+            'error_codes': ['request-exception']
+        }
 
 # JWT Token Required Decorator
 def token_required(f):
@@ -105,15 +130,29 @@ def index():
 
 # ============ AUTHENTICATION ============
 
+@app.route('/api/verify-captcha', methods=['POST'])
+def verify_captcha_endpoint():
+    data = request.get_json(silent=True) or {}
+    recaptcha_token = data.get('recaptcha_token') or data.get('token')
+
+    verification = verify_recaptcha(recaptcha_token, request.remote_addr)
+    status_code = 200 if verification.get('success') else 400
+
+    return jsonify(verification), status_code
+
 @app.route('/api/auth/register', methods=['POST'])
 def register():
     try:
         data = request.json
-        
+
         # Verify reCAPTCHA
         recaptcha_token = data.get('recaptcha_token')
-        if not recaptcha_token or not verify_recaptcha(recaptcha_token):
-            return jsonify({'error': 'reCAPTCHA verification failed'}), 400
+        verification = verify_recaptcha(recaptcha_token, request.remote_addr)
+        if not verification.get('success'):
+            return jsonify({
+                'error': verification.get('error') or 'reCAPTCHA verification failed',
+                'details': verification.get('error_codes')
+            }), 400
         
         # Check if user exists
         if db.users.find_one({'email': data['email']}):
@@ -149,8 +188,12 @@ def login():
         
         # Verify reCAPTCHA
         recaptcha_token = data.get('recaptcha_token')
-        if not recaptcha_token or not verify_recaptcha(recaptcha_token):
-            return jsonify({'error': 'reCAPTCHA verification failed'}), 400
+        verification = verify_recaptcha(recaptcha_token, request.remote_addr)
+        if not verification.get('success'):
+            return jsonify({
+                'error': verification.get('error') or 'reCAPTCHA verification failed',
+                'details': verification.get('error_codes')
+            }), 400
         
         # Find user
         user = db.users.find_one({'email': data['email']})

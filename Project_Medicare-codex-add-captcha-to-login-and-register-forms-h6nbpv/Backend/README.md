@@ -49,6 +49,9 @@ Backend/
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - User login
 
+### Security
+- `POST /api/verify-captcha` - Validate Google reCAPTCHA token
+
 ### Products
 - `GET /api/products` - Get all products
 - `GET /api/products?category=pain-relief` - Filter by category
@@ -72,6 +75,7 @@ Edit `config.py` or set environment variables:
 MONGODB_URI=mongodb://localhost:27017/
 DATABASE_NAME=medicare
 FLASK_PORT=5000
+RECAPTCHA_SECRET_KEY=your_recaptcha_secret
 ```
 
 ## 🔒 Security
