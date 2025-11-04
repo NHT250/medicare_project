@@ -1,42 +1,42 @@
 // Products Page Component
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { productsAPI } from '../services/api';
-import { useCart } from '../contexts/CartContext';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
-import '../styles/Products.css';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { productsAPI } from "../services/api";
+import { useCart } from "../contexts/CartContext";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import "../styles/Products.css";
 
 const SORT_MAP = {
   // fix: normalize sort parameters for API
-  popularity: 'popularity',
-  'price-low': 'price_asc',
-  'price-high': 'price_desc',
-  rating: 'rating',
-  name: 'name_asc'
+  popularity: "popularity",
+  "price-low": "price_asc",
+  "price-high": "price_desc",
+  rating: "rating",
+  name: "name_asc",
 };
 
 const CATEGORY_NAMES = [
-  'Pain Relief',
-  'Vitamins',
-  'Skin Care',
-  'Heart Health',
-  'Mental Health',
-  'Eye Care',
-  'Respiratory'
+  "Pain Relief",
+  "Vitamins",
+  "Skin Care",
+  "Heart Health",
+  "Mental Health",
+  "Eye Care",
+  "Respiratory",
 ];
 
-const slugify = (value = '') =>
+const slugify = (value = "") =>
   value
     .toString()
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '');
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 
 const CATEGORIES = CATEGORY_NAMES.map((name) => ({
   name,
-  slug: slugify(name)
+  slug: slugify(name),
 }));
 
 const Products = () => {
@@ -47,25 +47,30 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); // fix: track API errors
-  const initialPage = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1); // fix: hydrate current page from URL
+  const initialPage = Math.max(
+    parseInt(searchParams.get("page") || "1", 10) || 1,
+    1
+  ); // fix: hydrate current page from URL
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [totalProducts, setTotalProducts] = useState(0);
   const itemsPerPage = 8;
-  const placeholderImage = 'https://via.placeholder.com/300x200?text=No+Image'; // fix: placeholder for missing images
+  const placeholderImage = "https://via.placeholder.com/300x200?text=No+Image"; // fix: placeholder for missing images
   const descriptionClampStyle = {
-    display: '-webkit-box',
+    display: "-webkit-box",
     WebkitLineClamp: 3,
-    WebkitBoxOrient: 'vertical',
-    overflow: 'hidden'
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
   }; // fix: clamp description lines to keep layout tidy
 
   // Filters
   const [filters, setFilters] = useState({
-    category: searchParams.get('category') || 'all',
-    search: searchParams.get('search') || '',
-    sortBy: searchParams.get('sortBy') || 'popularity'
+    category: searchParams.get("category") || "all",
+    search: searchParams.get("search") || "",
+    sortBy: searchParams.get("sortBy") || "popularity",
   });
-  const [searchInput, setSearchInput] = useState(searchParams.get('search') || ''); // fix: state for debounced search bar
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get("search") || ""
+  ); // fix: state for debounced search bar
 
   const buildParams = useCallback(
     (pageValue) => {
@@ -75,9 +80,10 @@ const Products = () => {
         page: safePage,
         pageNumber: safePage,
         perPage: itemsPerPage,
-        ...(filters.category !== 'all' && { category: filters.category }),
+        ...(filters.category !== "all" && { category: filters.category }),
         ...(filters.search && { search: filters.search, q: filters.search }),
-        ...(filters.sortBy && SORT_MAP[filters.sortBy] && { sort: SORT_MAP[filters.sortBy] })
+        ...(filters.sortBy &&
+          SORT_MAP[filters.sortBy] && { sort: SORT_MAP[filters.sortBy] }),
       };
       return params;
     },
@@ -98,14 +104,16 @@ const Products = () => {
         response?.total ??
           response?.count ??
           response?.totalCount ??
-          (Array.isArray(response?.products) ? response.products.length : productList.length) ??
+          (Array.isArray(response?.products)
+            ? response.products.length
+            : productList.length) ??
           0
       );
       const success = response?.success !== false;
 
       return { response, productList, totalCount, success };
     } catch (err) {
-      console.error('Products API error', { params, error: err }); // fix: log params for debugging
+      console.error("Products API error", { params, error: err }); // fix: log params for debugging
       throw err;
     }
   }, []);
@@ -120,21 +128,25 @@ const Products = () => {
 
       try {
         data = await attemptFetch(params);
-      } catch (err) {
+        // eslint-disable-next-line no-unused-vars
+      } catch (error) {
         fallbackTried = true;
         const fallbackParams = {
           ...params,
-          offset: (Math.max(currentPage - 1, 0)) * itemsPerPage,
-          skip: (Math.max(currentPage - 1, 0)) * itemsPerPage,
-          pageIndex: Math.max(currentPage - 1, 0)
+          offset: Math.max(currentPage - 1, 0) * itemsPerPage,
+          skip: Math.max(currentPage - 1, 0) * itemsPerPage,
+          pageIndex: Math.max(currentPage - 1, 0),
         };
         try {
           data = await attemptFetch(fallbackParams);
         } catch (fallbackError) {
-          setError('Không tải được sản phẩm. Kiểm tra API URL, CORS, seed data, hoặc tên tham số.');
+          setError("No Products.");
           setProducts([]);
           setTotalProducts(0);
-          console.error('Products fallback error', { params: fallbackParams, error: fallbackError }); // fix: log fallback params
+          console.error("Products fallback error", {
+            params: fallbackParams,
+            error: fallbackError,
+          }); // fix: log fallback params
           return;
         }
       }
@@ -144,9 +156,9 @@ const Products = () => {
           fallbackTried = true;
           const fallbackParams = {
             ...params,
-            offset: (Math.max(currentPage - 1, 0)) * itemsPerPage,
-            skip: (Math.max(currentPage - 1, 0)) * itemsPerPage,
-            pageIndex: Math.max(currentPage - 1, 0)
+            offset: Math.max(currentPage - 1, 0) * itemsPerPage,
+            skip: Math.max(currentPage - 1, 0) * itemsPerPage,
+            pageIndex: Math.max(currentPage - 1, 0),
           };
           try {
             const fallbackData = await attemptFetch(fallbackParams);
@@ -155,39 +167,56 @@ const Products = () => {
               : [];
             setProducts(fallbackProducts);
             setTotalProducts(
-              Math.max(fallbackData.totalCount || fallbackProducts.length || 0, 0)
+              Math.max(
+                fallbackData.totalCount || fallbackProducts.length || 0,
+                0
+              )
             );
             if (fallbackData.response?.success === false) {
-              setError('Không tải được sản phẩm. Kiểm tra API URL, CORS, seed data, hoặc tên tham số.');
+              setError("No Products.");
             }
             return;
           } catch (fallbackError) {
-            setError('Không tải được sản phẩm. Kiểm tra API URL, CORS, seed data, hoặc tên tham số.');
+            setError("No Products.");
             setProducts([]);
             setTotalProducts(0);
-            console.error('Products fallback error', { params: fallbackParams, error: fallbackError });
+            console.error("Products fallback error", {
+              params: fallbackParams,
+              error: fallbackError,
+            });
             return;
           }
         }
 
         if (data?.response?.success === false) {
-          setError('Không tải được sản phẩm. Kiểm tra API URL, CORS, seed data, hoặc tên tham số.');
+          setError("No Products.");
         }
-        const safeProducts = Array.isArray(data?.productList) ? data.productList : [];
+        const safeProducts = Array.isArray(data?.productList)
+          ? data.productList
+          : [];
         setProducts(safeProducts);
-        setTotalProducts(Math.max(data?.totalCount || safeProducts.length || 0, 0));
+        setTotalProducts(
+          Math.max(data?.totalCount || safeProducts.length || 0, 0)
+        );
         return;
       }
 
       if (data?.response?.success === false) {
-        setError('Không tải được sản phẩm. Kiểm tra API URL, CORS, seed data, hoặc tên tham số.');
+        setError("No Products.");
       }
-      const safeProducts = Array.isArray(data?.productList) ? data.productList : [];
+      const safeProducts = Array.isArray(data?.productList)
+        ? data.productList
+        : [];
       setProducts(safeProducts);
-      setTotalProducts(Math.max(data?.totalCount || safeProducts.length || 0, 0));
+      setTotalProducts(
+        Math.max(data?.totalCount || safeProducts.length || 0, 0)
+      );
     } catch (error) {
-      console.error('Error loading products:', { error, params: buildParams(currentPage) }); // fix: include params in logs
-      setError('Không tải được sản phẩm. Kiểm tra API URL, CORS, seed data, hoặc tên tham số.');
+      console.error("Error loading products:", {
+        error,
+        params: buildParams(currentPage),
+      }); // fix: include params in logs
+      setError("No Products.");
       setProducts([]);
       setTotalProducts(0);
     } finally {
@@ -218,7 +247,7 @@ const Products = () => {
       category: filters.category,
       search: filters.search,
       sortBy: filters.sortBy,
-      page: String(currentPage)
+      page: String(currentPage),
     });
   }, [filters, currentPage, setSearchParams]); // fix: sync filters with URL
 
@@ -232,7 +261,7 @@ const Products = () => {
 
   const handleAddToCart = (product) => {
     addToCart(product, 1);
-    alert(`${product?.name || 'Product'} added to cart!`);
+    alert(`${product?.name || "Product"} added to cart!`);
   };
 
   const handleCategoryChange = (category) => {
@@ -247,7 +276,7 @@ const Products = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // fix: scroll to top when changing page
+    window.scrollTo({ top: 0, behavior: "smooth" }); // fix: scroll to top when changing page
   };
 
   const categoryCounts = useMemo(() => {
@@ -266,7 +295,10 @@ const Products = () => {
 
       const normalizedSlug = rawCategory ? slugify(rawCategory) : null;
 
-      if (normalizedSlug && Object.prototype.hasOwnProperty.call(counts, normalizedSlug)) {
+      if (
+        normalizedSlug &&
+        Object.prototype.hasOwnProperty.call(counts, normalizedSlug)
+      ) {
         counts[normalizedSlug] += 1;
       }
     });
@@ -278,20 +310,26 @@ const Products = () => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
-    
+
     for (let i = 0; i < fullStars; i++) {
-      stars.push(<i key={`full-${i}`} className="fas fa-star text-warning"></i>);
+      stars.push(
+        <i key={`full-${i}`} className="fas fa-star text-warning"></i>
+      );
     }
-    
+
     if (hasHalfStar) {
-      stars.push(<i key="half" className="fas fa-star-half-alt text-warning"></i>);
+      stars.push(
+        <i key="half" className="fas fa-star-half-alt text-warning"></i>
+      );
     }
-    
+
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
-      stars.push(<i key={`empty-${i}`} className="far fa-star text-warning"></i>);
+      stars.push(
+        <i key={`empty-${i}`} className="far fa-star text-warning"></i>
+      );
     }
-    
+
     return stars;
   };
 
@@ -307,15 +345,19 @@ const Products = () => {
               <h5 className="mb-3">Categories</h5>
               <div className="category-list">
                 <div
-                  className={`category-item ${filters.category === 'all' ? 'active' : ''}`}
-                  onClick={() => handleCategoryChange('all')}
+                  className={`category-item ${
+                    filters.category === "all" ? "active" : ""
+                  }`}
+                  onClick={() => handleCategoryChange("all")}
                 >
                   All Products ({totalProducts || 0})
                 </div>
                 {CATEGORIES.map((cat) => (
                   <div
                     key={cat.slug}
-                    className={`category-item ${filters.category === cat.slug ? 'active' : ''}`}
+                    className={`category-item ${
+                      filters.category === cat.slug ? "active" : ""
+                    }`}
                     onClick={() => handleCategoryChange(cat.slug)}
                   >
                     {cat.name} ({categoryCounts[cat.slug] ?? 0})
@@ -368,7 +410,10 @@ const Products = () => {
             ) : products.length > 0 ? (
               <div className="row g-4">
                 {products.map((product) => (
-                  <div key={product._id || product.id} className="col-lg-3 col-md-6">
+                  <div
+                    key={product._id || product.id}
+                    className="col-lg-3 col-md-6"
+                  >
                     <div className="product-card">
                       <div
                         className="product-image"
@@ -380,32 +425,43 @@ const Products = () => {
                       >
                         <img
                           src={product?.image || placeholderImage}
-                          alt={product?.name || 'Product image'}
+                          alt={product?.name || "Product image"}
                           className="img-fluid"
                         />
                         {product?.inStock ? (
                           <div className="stock-badge in-stock">In Stock</div>
                         ) : (
-                          <div className="stock-badge out-of-stock">Out of Stock</div>
+                          <div className="stock-badge out-of-stock">
+                            Out of Stock
+                          </div>
                         )}
                       </div>
                       <div className="product-info">
-                        <h6 className="product-name">{product?.name || 'Unnamed Product'}</h6>
-                        <p className="product-description" style={descriptionClampStyle}>
-                          {product?.description || 'No description available.'}
+                        <h6 className="product-name">
+                          {product?.name || "Unnamed Product"}
+                        </h6>
+                        <p
+                          className="product-description"
+                          style={descriptionClampStyle}
+                        >
+                          {product?.description || "No description available."}
                         </p>
                         <div className="product-rating mb-2">
                           <div className="stars">
                             {renderStars(Number(product?.rating) || 0)}
                           </div>
-                          <span className="rating-text">({product?.reviews || 0})</span>
+                          <span className="rating-text">
+                            ({product?.reviews || 0})
+                          </span>
                         </div>
                         <div className="price-section mb-2">
                           <span className="current-price">
                             ${Number(product?.price ?? 0).toFixed(2)}
                           </span>
                           {product?.oldPrice && (
-                            <span className="old-price">${Number(product.oldPrice).toFixed(2)}</span>
+                            <span className="old-price">
+                              ${Number(product.oldPrice).toFixed(2)}
+                            </span>
                           )}
                         </div>
                         <div className="product-actions">
@@ -415,7 +471,7 @@ const Products = () => {
                             disabled={!product?.inStock}
                           >
                             <i className="fas fa-shopping-cart me-1"></i>
-                            {product?.inStock ? 'Add to Cart' : 'Out of Stock'}
+                            {product?.inStock ? "Add to Cart" : "Out of Stock"}
                           </button>
                         </div>
                       </div>
@@ -427,33 +483,62 @@ const Products = () => {
               <div className="text-center py-5">
                 <i className="fas fa-search fa-3x text-muted mb-3"></i>
                 <h4 className="text-muted">No products found</h4>
-                <p className="text-muted">Try adjusting your filters or search terms</p>
+                <p className="text-muted">
+                  Try adjusting your filters or search terms
+                </p>
               </div>
             )}
 
             {!loading && !error && totalPages > 1 && (
-              <nav className="pagination-wrapper mt-4" aria-label="Products pagination">
+              <nav
+                className="pagination-wrapper mt-4"
+                aria-label="Products pagination"
+              >
                 <ul className="pagination justify-content-center">
-                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                  <li
+                    className={`page-item ${
+                      currentPage === 1 ? "disabled" : ""
+                    }`}
+                  >
                     <button
                       className="page-link"
-                      onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                      onClick={() =>
+                        currentPage > 1 && handlePageChange(currentPage - 1)
+                      }
                       disabled={currentPage === 1}
                     >
                       Prev
                     </button>
                   </li>
-                  {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-                    <li key={page} className={`page-item ${page === currentPage ? 'active' : ''}`}>
-                      <button className="page-link" onClick={() => handlePageChange(page)}>
+                  {Array.from(
+                    { length: totalPages },
+                    (_, index) => index + 1
+                  ).map((page) => (
+                    <li
+                      key={page}
+                      className={`page-item ${
+                        page === currentPage ? "active" : ""
+                      }`}
+                    >
+                      <button
+                        className="page-link"
+                        onClick={() => handlePageChange(page)}
+                      >
                         {page}
                       </button>
                     </li>
                   ))}
-                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                  <li
+                    className={`page-item ${
+                      currentPage === totalPages ? "disabled" : ""
+                    }`}
+                  >
                     <button
                       className="page-link"
-                      onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                      onClick={() =>
+                        currentPage < totalPages &&
+                        handlePageChange(currentPage + 1)
+                      }
                       disabled={currentPage === totalPages}
                     >
                       Next
@@ -472,8 +557,3 @@ const Products = () => {
 };
 
 export default Products;
-
-
-
-
-

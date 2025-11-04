@@ -3,6 +3,13 @@ import pymongo
 from pymongo import MongoClient
 from datetime import datetime
 import bcrypt
+import sys
+
+# Ensure Unicode-friendly stdout on Windows terminals
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 
 # Connect to MongoDB
 # For Local MongoDB:

@@ -122,7 +122,7 @@ const Homepage = () => {
   const [categories, setCategories] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [usingFallbackCategories, setUsingFallbackCategories] = useState(false);
+  const [, setUsingFallbackCategories] = useState(false);
   const [usingFallbackProducts, setUsingFallbackProducts] = useState(false);
 
   useEffect(() => {

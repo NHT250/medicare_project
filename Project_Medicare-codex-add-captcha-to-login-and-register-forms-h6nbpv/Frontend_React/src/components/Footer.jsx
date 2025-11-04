@@ -116,7 +116,7 @@ const Footer = () => {
 
         <hr
           className="my-4"
-          style={{ borderColor: "rgba(255, 255, 255, 0.2)" }}
+          style={{ borderColor: "rgba(255, 255, 255, 0)" }}
         />
         <div className="text-center">
           <p className="text-light mb-0">
