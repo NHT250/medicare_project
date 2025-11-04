@@ -47,12 +47,19 @@ export const authAPI = {
     const response = await api.post('/api/auth/login', credentials);
     return response.data;
   },
-  
+
   register: async (userData) => {
     const response = await api.post('/api/auth/register', userData);
     return response.data;
   },
-  
+
+  verifyCaptcha: async (token) => {
+    const response = await api.post('/api/verify-captcha', {
+      recaptcha_token: token
+    });
+    return response.data;
+  },
+
   logout: () => {
     localStorage.removeItem('medicare_token');
     localStorage.removeItem('medicare_user');

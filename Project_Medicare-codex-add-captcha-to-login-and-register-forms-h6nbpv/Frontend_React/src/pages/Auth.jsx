@@ -8,7 +8,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { login, register, isAuthenticated } = useAuth();
+  const { login, register, isAuthenticated, verifyCaptcha } = useAuth();
 
   const [activeTab, setActiveTab] = useState("login");
   const [loading, setLoading] = useState(false);
@@ -68,6 +68,26 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      const captchaCheck = await verifyCaptcha(loginCaptchaToken);
+      if (!captchaCheck.success) {
+        const errorCodes = Array.isArray(captchaCheck.errorCodes)
+          ? captchaCheck.errorCodes.filter(Boolean)
+          : captchaCheck.errorCodes
+          ? [captchaCheck.errorCodes]
+          : [];
+        const fallbackMessage =
+          captchaCheck.error ||
+          (errorCodes.length
+            ? `reCAPTCHA verification failed (${errorCodes.join(", ")})`
+            : "reCAPTCHA verification failed. Please try again.");
+
+        setError(fallbackMessage);
+        setLoginCaptchaToken("");
+        loginCaptchaRef.current?.reset();
+        setLoginForm((prev) => ({ ...prev, recaptcha_token: "" }));
+        return;
+      }
+
       const result = await login({
         ...loginForm,
         recaptcha_token: loginCaptchaToken,
@@ -150,6 +170,26 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      const captchaCheck = await verifyCaptcha(registerCaptchaToken);
+      if (!captchaCheck.success) {
+        const errorCodes = Array.isArray(captchaCheck.errorCodes)
+          ? captchaCheck.errorCodes.filter(Boolean)
+          : captchaCheck.errorCodes
+          ? [captchaCheck.errorCodes]
+          : [];
+        const fallbackMessage =
+          captchaCheck.error ||
+          (errorCodes.length
+            ? `reCAPTCHA verification failed (${errorCodes.join(", ")})`
+            : "reCAPTCHA verification failed. Please try again.");
+
+        setError(fallbackMessage);
+        setRegisterCaptchaToken("");
+        registerCaptchaRef.current?.reset();
+        setRegisterForm((prev) => ({ ...prev, recaptcha_token: "" }));
+        return;
+      }
+
       const result = await register({
         ...registerForm,
         recaptcha_token: registerCaptchaToken,
