@@ -1,7 +1,7 @@
 // Products Page Component
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { productsAPI, categoriesAPI } from '../services/api';
+import { productsAPI } from '../services/api';
 import { useCart } from '../contexts/CartContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -16,13 +16,35 @@ const SORT_MAP = {
   name: 'name_asc'
 };
 
+const CATEGORY_NAMES = [
+  'Pain Relief',
+  'Vitamins',
+  'Skin Care',
+  'Heart Health',
+  'Mental Health',
+  'Eye Care',
+  'Respiratory'
+];
+
+const slugify = (value = '') =>
+  value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+
+const CATEGORIES = CATEGORY_NAMES.map((name) => ({
+  name,
+  slug: slugify(name)
+}));
+
 const Products = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams(); // fix: allow updating URL query params
   const { addToCart } = useCart();
 
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null); // fix: track API errors
   const initialPage = Math.max(parseInt(searchParams.get('page') || '1', 10) || 1, 1); // fix: hydrate current page from URL
@@ -85,17 +107,6 @@ const Products = () => {
     } catch (err) {
       console.error('Products API error', { params, error: err }); // fix: log params for debugging
       throw err;
-    }
-  }, []);
-
-  const loadCategories = useCallback(async () => {
-    try {
-      const data = await categoriesAPI.getAll();
-      if (data.categories) {
-        setCategories(data.categories);
-      }
-    } catch (error) {
-      console.error('Error loading categories:', error);
     }
   }, []);
 
@@ -185,10 +196,6 @@ const Products = () => {
   }, [attemptFetch, buildParams, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
-
-  useEffect(() => {
     loadProducts();
   }, [loadProducts]);
 
@@ -243,6 +250,30 @@ const Products = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' }); // fix: scroll to top when changing page
   };
 
+  const categoryCounts = useMemo(() => {
+    const counts = CATEGORIES.reduce((acc, category) => {
+      acc[category.slug] = 0;
+      return acc;
+    }, {});
+
+    products.forEach((product) => {
+      const rawCategory =
+        product?.category?.slug ||
+        product?.category?.name ||
+        product?.category ||
+        product?.categoryName ||
+        product?.categorySlug;
+
+      const normalizedSlug = rawCategory ? slugify(rawCategory) : null;
+
+      if (normalizedSlug && Object.prototype.hasOwnProperty.call(counts, normalizedSlug)) {
+        counts[normalizedSlug] += 1;
+      }
+    });
+
+    return counts;
+  }, [products]);
+
   const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -279,15 +310,15 @@ const Products = () => {
                   className={`category-item ${filters.category === 'all' ? 'active' : ''}`}
                   onClick={() => handleCategoryChange('all')}
                 >
-                  All Products
+                  All Products ({totalProducts || 0})
                 </div>
-                {categories.map((cat) => (
+                {CATEGORIES.map((cat) => (
                   <div
-                    key={cat._id}
+                    key={cat.slug}
                     className={`category-item ${filters.category === cat.slug ? 'active' : ''}`}
                     onClick={() => handleCategoryChange(cat.slug)}
                   >
-                    <i className={cat.icon}></i> {cat.name}
+                    {cat.name} ({categoryCounts[cat.slug] ?? 0})
                   </div>
                 ))}
               </div>
