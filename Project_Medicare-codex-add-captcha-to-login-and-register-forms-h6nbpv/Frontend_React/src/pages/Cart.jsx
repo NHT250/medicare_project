@@ -1,5 +1,5 @@
 // Cart Page Component
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react'; // fix: memoize totals and manage confirm state
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import Navbar from '../components/Navbar';
@@ -10,29 +10,70 @@ const Cart = () => {
   const navigate = useNavigate();
   const { cartItems, cartTotal, updateQuantity, removeFromCart } = useCart();
 
-  const shippingFee = 5.00;
-  const tax = cartTotal * 0.08; // 8% tax
-  const total = cartTotal + shippingFee + tax;
+  const [pendingRemovalId, setPendingRemovalId] = useState(null); // fix: replace window.confirm with inline confirmation
+
+  const TAX_RATE = 0.08; // fix: shared rates/constants
+  const SHIPPING_FEE = 5;
+  const FREE_SHIP_THRESHOLD = 100;
+  const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100; // fix: avoid floating point drift
+
+  const { subtotal, shipping, tax, total } = useMemo(() => {
+    const currentSubtotal = round2(cartTotal);
+    const currentShipping =
+      currentSubtotal === 0 || currentSubtotal >= FREE_SHIP_THRESHOLD ? 0 : SHIPPING_FEE;
+    const currentTax = round2(currentSubtotal * TAX_RATE);
+    const currentTotal = round2(currentSubtotal + currentShipping + currentTax);
+
+    return {
+      subtotal: currentSubtotal,
+      shipping: currentShipping,
+      tax: currentTax,
+      total: currentTotal
+    };
+  }, [cartTotal]);
+
+  const placeholderImage = 'https://via.placeholder.com/150x150?text=No+Image'; // fix: placeholder for missing images
 
   const handleIncreaseQuantity = (item) => {
-    updateQuantity(item.id, item.quantity + 1);
+    const itemId = item?.id ?? item?._id; // fix: support id or _id keys
+    if (!itemId) {
+      return;
+    }
+    updateQuantity(itemId, (Number(item?.quantity || 0) + 1));
   };
 
   const handleDecreaseQuantity = (item) => {
-    if (item.quantity > 1) {
-      updateQuantity(item.id, item.quantity - 1);
+    const itemId = item?.id ?? item?._id; // fix: support id or _id keys
+    if (!itemId) {
+      return;
+    }
+    if ((item?.quantity || 0) > 1) {
+      updateQuantity(itemId, Number(item.quantity) - 1);
     }
   };
 
   const handleRemoveItem = (item) => {
-    if (window.confirm(`Remove ${item.name} from cart?`)) {
-      removeFromCart(item.id);
+    const itemId = item?.id ?? item?._id; // fix: unified id extraction
+    if (!itemId) {
+      return;
     }
+    if (pendingRemovalId === itemId) {
+      removeFromCart(itemId);
+      setPendingRemovalId(null);
+      return;
+    }
+    setPendingRemovalId(itemId);
   };
 
   const handleCheckout = () => {
     navigate('/checkout');
   };
+
+  useEffect(() => {
+    if (pendingRemovalId && !cartItems.some((item) => (item?.id ?? item?._id) === pendingRemovalId)) {
+      setPendingRemovalId(null); // fix: reset pending removal if item disappears
+    }
+  }, [cartItems, pendingRemovalId]);
 
   return (
     <div className="cart-page">
@@ -56,52 +97,85 @@ const Cart = () => {
             <div className="col-lg-8 mb-4">
               <div className="card">
                 <div className="card-body">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="cart-item">
+                  {cartItems.map((item, index) => {
+                    const itemId = item?.id ?? item?._id ?? `item-${index}`; // fix: use consistent key between id and _id
+                    const quantity = Number(item?.quantity || 0);
+                    const unitPrice = Number(item?.price ?? 0);
+                    const safeQuantity = quantity > 0 ? quantity : 1;
+                    const lineTotal = round2(unitPrice * safeQuantity);
+
+                    return (
+                      <div key={itemId} className="cart-item">
                       <div className="row align-items-center">
                         <div className="col-md-2">
                           <img
-                            src={item.image}
-                            alt={item.name}
+                            src={item?.image || placeholderImage}
+                            alt={item?.name || 'Cart item'}
                             className="img-fluid rounded"
                           />
                         </div>
                         <div className="col-md-4">
-                          <h6 className="mb-0">{item.name}</h6>
-                          <small className="text-muted">{item.description}</small>
+                          <h6 className="mb-0">{item?.name || 'Unnamed Product'}</h6>
+                          <small className="text-muted">{item?.description || 'No description available.'}</small>
                         </div>
                         <div className="col-md-2">
-                          <p className="mb-0 fw-bold">${item.price.toFixed(2)}</p>
+                          <p className="mb-0 fw-bold">${unitPrice.toFixed(2)}</p>
                         </div>
                         <div className="col-md-3">
                           <div className="quantity-control d-flex align-items-center">
                             <button
                               className="btn btn-sm btn-outline-secondary"
                               onClick={() => handleDecreaseQuantity(item)}
+                              disabled={quantity <= 1}
+                              aria-label={`Decrease quantity of ${item?.name || 'item'}`}
                             >
                               <i className="fas fa-minus"></i>
                             </button>
-                            <span className="mx-3">{item.quantity}</span>
+                            <span className="mx-3">{safeQuantity}</span>
                             <button
                               className="btn btn-sm btn-outline-secondary"
                               onClick={() => handleIncreaseQuantity(item)}
+                              aria-label={`Increase quantity of ${item?.name || 'item'}`}
                             >
                               <i className="fas fa-plus"></i>
                             </button>
                           </div>
                         </div>
-                        <div className="col-md-1">
+                        <div className="col-md-1 text-end">
+                          <small className="d-block text-muted">${lineTotal.toFixed(2)}</small>
                           <button
                             className="btn btn-sm btn-danger"
                             onClick={() => handleRemoveItem(item)}
+                            aria-label={`Remove ${item?.name || 'item'} from cart`}
+                            title={`Remove ${item?.name || 'item'} from cart`}
                           >
                             <i className="fas fa-trash"></i>
                           </button>
                         </div>
                       </div>
+                      {pendingRemovalId === (item?.id ?? item?._id) && (
+                        <div className="alert alert-warning mt-3" role="alert">
+                          Remove {item?.name || 'this item'} from cart?
+                          <div className="mt-2 d-flex gap-2">
+                            <button
+                              className="btn btn-sm btn-danger"
+                              onClick={() => handleRemoveItem(item)}
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={() => setPendingRemovalId(null)}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       <hr />
                     </div>
-                  ))}
+                    );
+                  })}
 
                   <div className="d-flex justify-content-between mt-3">
                     <button
@@ -125,11 +199,11 @@ const Cart = () => {
                 <div className="card-body">
                   <div className="d-flex justify-content-between mb-2">
                     <span>Subtotal:</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                    <span>${subtotal.toFixed(2)}</span>
                   </div>
                   <div className="d-flex justify-content-between mb-2">
                     <span>Shipping:</span>
-                    <span>${shippingFee.toFixed(2)}</span>
+                    <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
                   </div>
                   <div className="d-flex justify-content-between mb-2">
                     <span>Tax (8%):</span>
@@ -143,6 +217,7 @@ const Cart = () => {
                   <button
                     className="btn btn-success w-100"
                     onClick={handleCheckout}
+                    disabled={cartItems.length === 0}
                   >
                     <i className="fas fa-lock me-2"></i>
                     Proceed to Checkout
