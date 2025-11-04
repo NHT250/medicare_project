@@ -117,7 +117,7 @@ brew services start mongodb-community
 
 ### 3. Install Dependencies
 ```bash
-cd Backend
+cd backend/flask_app
 npm install mongoose
 ```
 

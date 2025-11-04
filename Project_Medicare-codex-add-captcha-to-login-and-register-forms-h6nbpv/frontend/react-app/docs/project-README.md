@@ -21,7 +21,7 @@ Modern React-based frontend for Medicare Online Pharmacy platform.
 
 1. **Install dependencies:**
    ```bash
-   cd Frontend_React
+   cd frontend/react-app
    npm install
    ```
 
@@ -44,7 +44,7 @@ Modern React-based frontend for Medicare Online Pharmacy platform.
 ## 📁 Project Structure
 
 ```
-Frontend_React/
+frontend/react-app/
 ├── public/               # Static assets
 ├── src/
 │   ├── components/       # Reusable components
