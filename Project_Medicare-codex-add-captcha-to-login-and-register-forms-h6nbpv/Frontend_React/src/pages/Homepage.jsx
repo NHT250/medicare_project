@@ -8,6 +8,112 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import "../styles/Homepage.css";
 
+const FALLBACK_CATEGORIES = [
+  {
+    _id: "fallback-pain-relief",
+    name: "Pain Relief",
+    description: "Medications for pain management",
+    icon: "fas fa-pills",
+    slug: "pain-relief",
+    isFallback: true,
+  },
+  {
+    _id: "fallback-vitamins",
+    name: "Vitamins",
+    description: "Vitamin and mineral supplements",
+    icon: "fas fa-leaf",
+    slug: "vitamins",
+    isFallback: true,
+  },
+  {
+    _id: "fallback-skin-care",
+    name: "Skin Care",
+    description: "Products for skin health",
+    icon: "fas fa-hand-sparkles",
+    slug: "skin-care",
+    isFallback: true,
+  },
+  {
+    _id: "fallback-heart-health",
+    name: "Heart Health",
+    description: "Medications for cardiovascular health",
+    icon: "fas fa-heartbeat",
+    slug: "heart-health",
+    isFallback: true,
+  },
+  {
+    _id: "fallback-mental-health",
+    name: "Mental Health",
+    description: "Medications for mental wellbeing",
+    icon: "fas fa-brain",
+    slug: "mental-health",
+    isFallback: true,
+  },
+  {
+    _id: "fallback-respiratory",
+    name: "Respiratory",
+    description: "Medications for breathing and lung health",
+    icon: "fas fa-lungs",
+    slug: "respiratory",
+    isFallback: true,
+  },
+];
+
+const FALLBACK_FEATURED_PRODUCTS = [
+  {
+    _id: "fallback-paracetamol",
+    id: "fallback-paracetamol",
+    name: "Paracetamol 500mg",
+    description: "Pain relief tablets for headaches and fever",
+    price: 7.0,
+    oldPrice: 8.0,
+    image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae",
+    rating: 4.8,
+    reviews: 124,
+    inStock: false,
+    isFallback: true,
+  },
+  {
+    _id: "fallback-vitamin-c",
+    id: "fallback-vitamin-c",
+    name: "Vitamin C 1000mg",
+    description: "Immune support supplement",
+    price: 24.99,
+    oldPrice: null,
+    image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae",
+    rating: 4.5,
+    reviews: 89,
+    inStock: false,
+    isFallback: true,
+  },
+  {
+    _id: "fallback-omega3",
+    id: "fallback-omega3",
+    name: "Omega-3 Fish Oil",
+    description: "Heart health capsules with essential fatty acids",
+    price: 32.99,
+    oldPrice: 39.99,
+    image: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88",
+    rating: 4.9,
+    reviews: 156,
+    inStock: false,
+    isFallback: true,
+  },
+  {
+    _id: "fallback-multivitamin",
+    id: "fallback-multivitamin",
+    name: "Daily Multivitamin",
+    description: "Complete daily nutrition supplement",
+    price: 19.99,
+    oldPrice: null,
+    image: "https://images.unsplash.com/photo-1550572017-edd951aa0b0a",
+    rating: 4.7,
+    reviews: 203,
+    inStock: false,
+    isFallback: true,
+  },
+];
+
 const Homepage = () => {
   const navigate = useNavigate();
   useAuth();
@@ -16,6 +122,8 @@ const Homepage = () => {
   const [categories, setCategories] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [usingFallbackCategories, setUsingFallbackCategories] = useState(false);
+  const [usingFallbackProducts, setUsingFallbackProducts] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -26,25 +134,56 @@ const Homepage = () => {
       setLoading(true);
 
       // Load categories
-      const categoriesData = await categoriesAPI.getAll();
-      if (categoriesData.categories) {
-        setCategories(categoriesData.categories);
+      const [categoriesData, productsData] = await Promise.all([
+        categoriesAPI.getAll(),
+        productsAPI.getAll({ limit: 4 }),
+      ]);
+
+      const fetchedCategories = categoriesData?.categories || [];
+      if (fetchedCategories.length > 0) {
+        setCategories(fetchedCategories);
+        setUsingFallbackCategories(false);
+      } else {
+        setCategories(FALLBACK_CATEGORIES);
+        setUsingFallbackCategories(true);
       }
 
-      // Load featured products
-      const productsData = await productsAPI.getAll({ limit: 4 });
-      if (productsData.products) {
-        setFeaturedProducts(productsData.products);
+      const fetchedProducts = productsData?.products || [];
+      if (fetchedProducts.length > 0) {
+        setFeaturedProducts(
+          fetchedProducts.map((product) => ({
+            ...product,
+            id: product.id || product._id,
+          }))
+        );
+        setUsingFallbackProducts(false);
+      } else {
+        setFeaturedProducts(FALLBACK_FEATURED_PRODUCTS);
+        setUsingFallbackProducts(true);
       }
     } catch (error) {
       console.error("Error loading data:", error);
+      setCategories(FALLBACK_CATEGORIES);
+      setFeaturedProducts(FALLBACK_FEATURED_PRODUCTS);
+      setUsingFallbackCategories(true);
+      setUsingFallbackProducts(true);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddToCart = (product) => {
-    addToCart(product, 1);
+    if (usingFallbackProducts || product.isFallback) {
+      showNotification(
+        "Live inventory is unavailable right now. Please check back soon!"
+      );
+      return;
+    }
+
+    const cartProduct = product.id
+      ? product
+      : { ...product, id: product._id };
+    addToCart(cartProduct, 1);
     showNotification(`${product.name} added to cart!`, "success");
   };
 
@@ -148,7 +287,13 @@ const Homepage = () => {
                         src={product.image}
                         alt={product.name}
                         className="img-fluid"
-                        onClick={() => navigate(`/product/${product._id}`)}
+                        onClick={() =>
+                          !usingFallbackProducts && product._id
+                            ? navigate(`/product/${product._id}`)
+                            : null
+                        }
+                        role="button"
+                        style={{ cursor: usingFallbackProducts ? "default" : "pointer" }}
                       />
                       {product.oldPrice && (
                         <div className="discount-badge">
@@ -185,9 +330,11 @@ const Homepage = () => {
                       <button
                         className="btn btn-success w-100"
                         onClick={() => handleAddToCart(product)}
-                        disabled={!product.inStock}
+                        disabled={!product.inStock || usingFallbackProducts || product.isFallback}
                       >
-                        {product.inStock ? "Add to Cart" : "Out of Stock"}
+                        {product.inStock && !usingFallbackProducts && !product.isFallback
+                          ? "Add to Cart"
+                          : "Out of Stock"}
                       </button>
                     </div>
                   </div>
