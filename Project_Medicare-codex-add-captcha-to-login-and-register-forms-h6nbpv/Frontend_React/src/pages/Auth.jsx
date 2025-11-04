@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import config from "../config";
+import config from "../utils/config";
 import "../styles/Auth.css";
 import ReCAPTCHA from "react-google-recaptcha";
 

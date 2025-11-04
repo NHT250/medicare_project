@@ -1,6 +1,6 @@
 // Cart Context for managing shopping cart state
 import React, { createContext, useContext, useState, useEffect } from "react";
-import config from "../config";
+import config from "../utils/config";
 
 const CartContext = createContext(null);
 
