@@ -1,6 +1,6 @@
 // API Service Layer
 import axios from 'axios';
-import config from '../config';
+import config from '../utils/config';
 
 // Create axios instance
 const api = axios.create({

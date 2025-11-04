@@ -1,7 +1,7 @@
 // Auth Context for managing authentication state
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { authAPI } from "../services/api";
-import config from "../config";
+import config from "../utils/config";
 
 const AuthContext = createContext(null);
 
