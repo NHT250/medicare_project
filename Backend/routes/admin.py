@@ -572,34 +572,3 @@ def reset_user_password(current_user, user_id):
         }
     )
 
-
-@admin_bp.route("/dashboard/summary", methods=["GET"])
-@token_required
-@admin_required
-def dashboard_summary(current_user):  # pylint: disable=unused-argument
-    db = _get_db()
-
-    total_users = db.users.count_documents({})
-    total_orders = db.orders.count_documents({})
-
-    revenue_result = list(
-        db.orders.aggregate(
-            [
-                {
-                    "$group": {
-                        "_id": None,
-                        "total_revenue": {"$sum": {"$ifNull": ["$total", 0]}},
-                    }
-                }
-            ]
-        )
-    )
-    total_revenue = revenue_result[0]["total_revenue"] if revenue_result else 0
-
-    return jsonify(
-        {
-            "total_users": total_users,
-            "total_orders": total_orders,
-            "total_revenue": total_revenue,
-        }
-    )

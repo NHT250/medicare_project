@@ -1,4 +1,5 @@
 const PAGE_SIZE = 6;
+const REVENUE_STATUSES = new Set(["confirmed", "delivered"]);
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
@@ -91,6 +92,7 @@ const mockUsers = [
     phone: "+84 912 345 678",
     role: "admin",
     is_banned: false,
+    createdAt: "2024-05-06T08:00:00Z",
   },
   {
     _id: "user-001",
@@ -99,6 +101,7 @@ const mockUsers = [
     phone: "+84 912 555 101",
     role: "customer",
     is_banned: false,
+    createdAt: "2024-05-05T09:15:00Z",
   },
   {
     _id: "user-002",
@@ -107,6 +110,7 @@ const mockUsers = [
     phone: "+84 988 123 456",
     role: "customer",
     is_banned: false,
+    createdAt: "2024-05-04T11:30:00Z",
   },
   {
     _id: "user-003",
@@ -115,6 +119,7 @@ const mockUsers = [
     phone: "+84 934 777 321",
     role: "customer",
     is_banned: true,
+    createdAt: "2024-05-03T14:45:00Z",
   },
   {
     _id: "user-004",
@@ -123,6 +128,7 @@ const mockUsers = [
     phone: "+84 901 246 810",
     role: "customer",
     is_banned: false,
+    createdAt: "2024-05-02T10:20:00Z",
   },
   {
     _id: "user-005",
@@ -131,6 +137,7 @@ const mockUsers = [
     phone: "+84 965 112 233",
     role: "customer",
     is_banned: false,
+    createdAt: "2024-05-01T07:55:00Z",
   },
 ];
 
@@ -138,7 +145,8 @@ const mockOrders = [
   {
     _id: "order-1001",
     orderId: "ORD-1001",
-    userId: "Minh Tran",
+    userId: "user-001",
+    customerName: "Minh Tran",
     total: 58.6,
     status: "pending",
     createdAt: "2024-05-01T08:45:00Z",
@@ -146,7 +154,8 @@ const mockOrders = [
   {
     _id: "order-1002",
     orderId: "ORD-1002",
-    userId: "Lan Pham",
+    userId: "user-002",
+    customerName: "Lan Pham",
     total: 142.3,
     status: "confirmed",
     createdAt: "2024-05-02T10:15:00Z",
@@ -154,7 +163,8 @@ const mockOrders = [
   {
     _id: "order-1003",
     orderId: "ORD-1003",
-    userId: "Hoang Le",
+    userId: "user-003",
+    customerName: "Hoang Le",
     total: 21.4,
     status: "delivered",
     createdAt: "2024-05-03T13:30:00Z",
@@ -162,7 +172,8 @@ const mockOrders = [
   {
     _id: "order-1004",
     orderId: "ORD-1004",
-    userId: "Thu Dang",
+    userId: "user-004",
+    customerName: "Thu Dang",
     total: 75.0,
     status: "pending",
     createdAt: "2024-05-04T09:10:00Z",
@@ -170,7 +181,8 @@ const mockOrders = [
   {
     _id: "order-1005",
     orderId: "ORD-1005",
-    userId: "Quang Bui",
+    userId: "user-005",
+    customerName: "Quang Bui",
     total: 215.99,
     status: "cancelled",
     createdAt: "2024-05-05T16:55:00Z",
@@ -178,7 +190,8 @@ const mockOrders = [
   {
     _id: "order-1006",
     orderId: "ORD-1006",
-    userId: "Minh Tran",
+    userId: "user-001",
+    customerName: "Minh Tran",
     total: 35.2,
     status: "delivered",
     createdAt: "2024-05-06T14:05:00Z",
@@ -192,18 +205,105 @@ const findUser = (id) => mockUsers.find((item) => item._id === id);
 const simulateNetwork = (payload) =>
   new Promise((resolve) => setTimeout(() => resolve(clone(payload)), 250));
 
-export const mockAdminAPI = {
-  getDashboard: async () => {
-    const totalRevenue = mockOrders
-      .filter((order) => order.status !== "cancelled")
-      .reduce((sum, order) => sum + Number(order.total || 0), 0);
+const calculateDashboardSummary = () => {
+  const totalRevenue = mockOrders
+    .filter((order) => REVENUE_STATUSES.has((order.status || "").toLowerCase()))
+    .reduce((sum, order) => sum + Number(order.total || 0), 0);
 
-    return simulateNetwork({
-      total_users: mockUsers.length,
-      total_orders: mockOrders.length,
-      total_revenue: Number(totalRevenue.toFixed(2)),
+  const activeProducts = mockProducts.filter((product) => {
+    const isActive = product.is_active !== false;
+    const stock = Number(product.stock || 0);
+    return isActive || stock > 0;
+  }).length;
+
+  return {
+    total_users: mockUsers.length,
+    total_orders: mockOrders.length,
+    total_revenue: Number(totalRevenue.toFixed(2)),
+    active_products: activeProducts,
+  };
+};
+
+const buildRecentOrders = () => {
+  return [...mockOrders]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5)
+    .map((order) => {
+      const user = findUser(order.userId);
+      const customerName =
+        order.customerName || user?.name || user?.email || "Unknown customer";
+
+      return {
+        id: order._id,
+        order_id: order.orderId,
+        customer_name: customerName,
+        total: Number(order.total || 0),
+        status: order.status,
+        created_at: order.createdAt,
+      };
     });
-  },
+};
+
+const buildRecentUsers = () => {
+  return [...mockUsers]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5)
+    .map((user) => ({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      created_at: user.createdAt,
+    }));
+};
+
+const parseRangeDays = (range = "7d") => {
+  if (typeof range === "string") {
+    const match = range.match(/^(\d+)d$/i);
+    if (match) {
+      return Math.max(parseInt(match[1], 10), 1);
+    }
+  }
+  return 7;
+};
+
+const buildRevenueSeries = (range = "7d") => {
+  const days = parseRangeDays(range);
+  const grouped = new Map();
+
+  mockOrders.forEach((order) => {
+    if (!REVENUE_STATUSES.has((order.status || "").toLowerCase())) {
+      return;
+    }
+    if (!order.createdAt) {
+      return;
+    }
+    const dayKey = order.createdAt.slice(0, 10);
+    const stats = grouped.get(dayKey) || { revenue: 0, orders: 0 };
+    stats.revenue += Number(order.total || 0);
+    stats.orders += 1;
+    grouped.set(dayKey, stats);
+  });
+
+  const sortedDays = Array.from(grouped.keys()).sort();
+  const selectedDays = sortedDays.slice(-days);
+
+  return selectedDays.map((day) => {
+    const stats = grouped.get(day) || { revenue: 0, orders: 0 };
+    return {
+      date: day,
+      revenue: Number(stats.revenue.toFixed(2)),
+      orders: stats.orders,
+    };
+  });
+};
+
+export const mockAdminAPI = {
+  getDashboard: async () => simulateNetwork(calculateDashboardSummary()),
+  getDashboardSummary: async () => simulateNetwork(calculateDashboardSummary()),
+  getRecentOrders: async () => simulateNetwork(buildRecentOrders()),
+  getRecentUsers: async () => simulateNetwork(buildRecentUsers()),
+  getRevenueSeries: async (range = "7d") =>
+    simulateNetwork(buildRevenueSeries(range)),
   listProducts: async ({ page = 1, search = "" } = {}) => {
     const normalizedQuery = search.trim().toLowerCase();
     const filtered = normalizedQuery

@@ -1,10 +1,68 @@
 import api from "../services/api";
+import config from "../config";
+import mockAdminAPI from "./mockData";
+
+const useMockData = config.USE_ADMIN_MOCKS;
+
+const withMockFallback = async (networkCall, mockCall) => {
+  if (useMockData && typeof mockCall === "function") {
+    return mockCall();
+  }
+
+  try {
+    return await networkCall();
+  } catch (error) {
+    if (typeof mockCall === "function") {
+      console.warn("Admin API request failed, using mock data instead.", error);
+      return mockCall();
+    }
+    throw error;
+  }
+};
+
+export const getDashboardSummary = async () =>
+  withMockFallback(
+    async () => {
+      const response = await api.get("/api/admin/dashboard/summary");
+      return response.data;
+    },
+    () => mockAdminAPI.getDashboardSummary?.()
+  );
+
+export const getRecentOrders = async () =>
+  withMockFallback(
+    async () => {
+      const response = await api.get("/api/admin/dashboard/recent-orders");
+      return response.data;
+    },
+    () => mockAdminAPI.getRecentOrders?.()
+  );
+
+export const getRecentUsers = async () =>
+  withMockFallback(
+    async () => {
+      const response = await api.get("/api/admin/dashboard/recent-users");
+      return response.data;
+    },
+    () => mockAdminAPI.getRecentUsers?.()
+  );
+
+export const getRevenue = async (range = "7d") =>
+  withMockFallback(
+    async () => {
+      const response = await api.get("/api/admin/dashboard/revenue", {
+        params: { range },
+      });
+      return response.data;
+    },
+    () => mockAdminAPI.getRevenueSeries?.(range)
+  );
 
 const dashboard = {
-  summary: async () => {
-    const response = await api.get("/api/admin/dashboard/summary");
-    return response.data;
-  },
+  summary: getDashboardSummary,
+  recentOrders: getRecentOrders,
+  recentUsers: getRecentUsers,
+  revenue: getRevenue,
 };
 
 const products = {
