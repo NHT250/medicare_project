@@ -1,13 +1,14 @@
 // Auth Page - Login & Register
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import config from "../config";
 import "../styles/Auth.css";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { login, register, isAuthenticated } = useAuth();
+  const location = useLocation();
+  const { login, register, isAuthenticated, role, user } = useAuth();
 
   const [activeTab, setActiveTab] = useState("login");
   const [loading, setLoading] = useState(false);
@@ -34,9 +35,13 @@ const Auth = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/");
+      if ((role || user?.role) === "admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, role, user]);
 
   // Handle login submit
   const handleLoginSubmit = async (e) => {
@@ -71,8 +76,12 @@ const Auth = () => {
       const result = await login(loginForm);
 
       if (result.success) {
-        alert("Login successful! Redirecting to homepage...");
-        navigate("/");
+        alert("Login successful! Redirecting...");
+        const destination =
+          result.data.role === "admin"
+            ? "/admin"
+            : location.state?.from || "/";
+        navigate(destination);
       } else {
         setError(result.error);
         if (window.grecaptcha) {

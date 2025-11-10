@@ -32,12 +32,14 @@ sample_users = [
             'district': 'District 1',
             'city': 'Ho Chi Minh City'
         },
-        'createdAt': datetime.now(),
-        'updatedAt': datetime.now()
+        'role': 'customer',
+        'is_banned': False,
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow()
     },
     {
         'email': 'admin@medicare.com',
-        'password': bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
+        'password': bcrypt.hashpw('Admin@123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
         'name': 'Admin User',
         'phone': '0987654321',
         'address': {
@@ -46,8 +48,10 @@ sample_users = [
             'district': 'District 3',
             'city': 'Ho Chi Minh City'
         },
-        'createdAt': datetime.now(),
-        'updatedAt': datetime.now()
+        'role': 'admin',
+        'is_banned': False,
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow()
     }
 ]
 
@@ -101,79 +105,79 @@ sample_categories = [
 sample_products = [
     {
         'name': 'Paracetamol 500mg',
-        'description': 'Pain relief tablets for headaches and fever',
-        'price': 7.00,
-        'oldPrice': 8.00,
-        'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae',
+        'slug': 'paracetamol-500mg',
         'category': 'pain-relief',
-        'subcategory': 'fever',
+        'price': 7.00,
+        'discount': 12,
         'stock': 100,
-        'inStock': True,
-        'rating': 4.8,
-        'reviews': 124,
-        'ingredients': ['Paracetamol 500mg'],
-        'usage': 'Take 1-2 tablets every 4-6 hours',
-        'sideEffects': 'May cause nausea in some cases',
-        'warnings': 'Do not exceed recommended dose',
-        'createdAt': datetime.now(),
-        'updatedAt': datetime.now()
+        'images': [
+            'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80'
+        ],
+        'description': 'Pain relief tablets for headaches and fever with fast-acting ingredients.',
+        'specifications': [
+            {'key': 'Dosage', 'value': '500mg'},
+            {'key': 'Pack Size', 'value': '10 tablets'},
+        ],
+        'is_active': True,
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow()
     },
     {
         'name': 'Vitamin C 1000mg',
-        'description': 'Immune support supplement',
-        'price': 24.99,
-        'oldPrice': None,
-        'image': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae',
+        'slug': 'vitamin-c-1000mg',
         'category': 'vitamins',
-        'subcategory': 'immune',
+        'price': 24.99,
+        'discount': 0,
         'stock': 75,
-        'inStock': True,
-        'rating': 4.5,
-        'reviews': 89,
-        'ingredients': ['Vitamin C 1000mg', 'Bioflavonoids'],
-        'usage': 'Take 1 tablet daily with meals',
-        'sideEffects': 'May cause diarrhea if taken in excess',
-        'warnings': 'Store in cool, dry place',
-        'createdAt': datetime.now(),
-        'updatedAt': datetime.now()
+        'images': [
+            'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=800&q=80'
+        ],
+        'description': 'High potency Vitamin C supplement for immune support.',
+        'specifications': [
+            {'key': 'Serving Size', 'value': '1 tablet'},
+            {'key': 'Form', 'value': 'Time release'},
+        ],
+        'is_active': True,
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow()
     },
     {
         'name': 'Omega-3 Fish Oil',
-        'description': 'Heart health capsules with essential fatty acids',
-        'price': 32.99,
-        'oldPrice': 39.99,
-        'image': 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88',
+        'slug': 'omega-3-fish-oil',
         'category': 'heart-health',
-        'subcategory': 'cardiovascular',
+        'price': 32.99,
+        'discount': 15,
         'stock': 50,
-        'inStock': True,
-        'rating': 4.9,
-        'reviews': 156,
-        'ingredients': ['Omega-3 1000mg', 'EPA', 'DHA'],
-        'usage': 'Take 1-2 capsules with meals',
-        'sideEffects': 'Fishy aftertaste may occur',
-        'warnings': 'If you have a fish allergy, do not use',
-        'createdAt': datetime.now(),
-        'updatedAt': datetime.now()
+        'images': [
+            'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80'
+        ],
+        'description': 'Heart health capsules with essential fatty acids EPA and DHA.',
+        'specifications': [
+            {'key': 'EPA', 'value': '360mg'},
+            {'key': 'DHA', 'value': '240mg'},
+        ],
+        'is_active': True,
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow()
     },
     {
         'name': 'Daily Multivitamin',
-        'description': 'Complete daily nutrition supplement',
-        'price': 19.99,
-        'oldPrice': None,
-        'image': 'https://images.unsplash.com/photo-1550572017-edd951aa0b0a',
+        'slug': 'daily-multivitamin',
         'category': 'vitamins',
-        'subcategory': 'general',
+        'price': 19.99,
+        'discount': 5,
         'stock': 60,
-        'inStock': True,
-        'rating': 4.7,
-        'reviews': 203,
-        'ingredients': ['Vitamin A', 'Vitamin B complex', 'Vitamin C', 'Vitamin D', 'Minerals'],
-        'usage': 'Take 1 tablet daily with breakfast',
-        'sideEffects': 'None reported',
-        'warnings': 'Keep out of reach of children',
-        'createdAt': datetime.now(),
-        'updatedAt': datetime.now()
+        'images': [
+            'https://images.unsplash.com/photo-1550572017-edd951aa0b0a?auto=format&fit=crop&w=800&q=80'
+        ],
+        'description': 'Complete daily nutrition supplement supporting overall wellness.',
+        'specifications': [
+            {'key': 'Tablets', 'value': '60'},
+            {'key': 'Recommended Use', 'value': 'Take 1 tablet daily'},
+        ],
+        'is_active': True,
+        'createdAt': datetime.utcnow(),
+        'updatedAt': datetime.utcnow()
     }
 ]
 
