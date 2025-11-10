@@ -22,6 +22,8 @@ import AdminProducts from './admin/pages/AdminProducts';
 import AdminProductEditor from './admin/pages/AdminProductEditor';
 import AdminUsers from './admin/pages/AdminUsers';
 import AdminUserEditor from './admin/pages/AdminUserEditor';
+import AdminOrders from './admin/pages/AdminOrders';
+import AdminOrderDetail from './admin/pages/AdminOrderDetail';
 
 // Import Bootstrap CSS
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -79,6 +81,8 @@ function App() {
                 <Route path="products" element={<AdminProducts />} />
                 <Route path="products/new" element={<AdminProductEditor mode="create" />} />
                 <Route path="products/:id/edit" element={<AdminProductEditor mode="edit" />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="orders/:id" element={<AdminOrderDetail />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="users/:id" element={<AdminUserEditor />} />
               </Route>

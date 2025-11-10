@@ -39,6 +39,14 @@ const AdminLayout = () => {
             <i className="fas fa-pills me-2" /> Products
           </NavLink>
           <NavLink
+            to="/admin/orders"
+            className={({ isActive }) =>
+              `nav-link text-white ${isActive ? "fw-bold text-warning" : ""}`
+            }
+          >
+            <i className="fas fa-shopping-bag me-2" /> Orders
+          </NavLink>
+          <NavLink
             to="/admin/users"
             className={({ isActive }) =>
               `nav-link text-white ${isActive ? "fw-bold text-warning" : ""}`

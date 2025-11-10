@@ -23,13 +23,6 @@ from utils.helpers import (
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 
 VALID_ROLES = {"admin", "customer"}
-VALID_ORDER_STATUSES = ["pending", "confirmed", "delivered", "cancelled"]
-ORDER_TRANSITIONS = {
-    "pending": {"confirmed", "cancelled"},
-    "confirmed": {"delivered", "cancelled"},
-    "delivered": set(),
-    "cancelled": set(),
-}
 
 
 def _get_db():
@@ -294,75 +287,6 @@ def delete_product(current_user, product_id):  # pylint: disable=unused-argument
     if result.deleted_count == 0:
         return jsonify({"error": "Product not found"}), 404
     return "", 204
-
-
-@admin_bp.route("/orders", methods=["GET"])
-@token_required
-@admin_required
-def list_orders(current_user):  # pylint: disable=unused-argument
-    db = _get_db()
-    page = max(int(request.args.get("page", 1)), 1)
-    limit = min(max(int(request.args.get("limit", 20)), 1), 100)
-    status = (request.args.get("status") or "").strip()
-    user_id = (request.args.get("user_id") or "").strip()
-
-    query: dict[str, Any] = {}
-    if status:
-        query["status"] = status
-    if user_id:
-        query["userId"] = user_id
-
-    total = db.orders.count_documents(query)
-    cursor = (
-        db.orders.find(query)
-        .sort("createdAt", -1)
-        .skip((page - 1) * limit)
-        .limit(limit)
-    )
-    orders = [serialize_doc(order) for order in cursor]
-
-    return jsonify(build_paginated_response(orders, total, page, limit))
-
-
-@admin_bp.route("/orders/<order_id>/status", methods=["PATCH"])
-@token_required
-@admin_required
-def update_order_status(current_user, order_id):  # pylint: disable=unused-argument
-    db = _get_db()
-    object_id = _parse_object_id(order_id)
-    if not object_id:
-        return jsonify({"error": "Order not found"}), 404
-
-    payload = request.get_json(force=True, silent=True) or {}
-    new_status = payload.get("status")
-    if new_status not in VALID_ORDER_STATUSES:
-        return jsonify({"error": "Invalid order status"}), 400
-
-    order = db.orders.find_one({"_id": object_id})
-    if not order:
-        return jsonify({"error": "Order not found"}), 404
-
-    current_status = order.get("status", "pending")
-    if new_status != current_status:
-        allowed = ORDER_TRANSITIONS.get(current_status, set())
-        if new_status not in allowed:
-            return (
-                jsonify(
-                    {
-                        "error": "Invalid status transition",
-                        "current": current_status,
-                        "allowed": sorted(allowed),
-                    }
-                ),
-                400,
-            )
-
-    db.orders.update_one(
-        {"_id": object_id},
-        {"$set": {"status": new_status, "updatedAt": datetime.utcnow()}},
-    )
-    updated = db.orders.find_one({"_id": object_id})
-    return jsonify({"message": "Order status updated", "order": serialize_doc(updated)})
 
 
 @admin_bp.route("/users", methods=["GET"])

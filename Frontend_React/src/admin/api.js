@@ -115,15 +115,47 @@ const users = {
   },
 };
 
+export const listOrders = async (params = {}) =>
+  withMockFallback(
+    async () => {
+      const response = await api.get("/api/admin/orders", { params });
+      return response.data;
+    },
+    () => mockAdminAPI.listOrders?.(params)
+  );
+
+export const getOrder = async (id) =>
+  withMockFallback(
+    async () => {
+      const response = await api.get(`/api/admin/orders/${id}`);
+      return response.data;
+    },
+    () => mockAdminAPI.getOrderDetail?.(id)
+  );
+
+export const updateOrderStatus = async (id, status) =>
+  withMockFallback(
+    async () => {
+      const response = await api.patch(`/api/admin/orders/${id}/status`, { status });
+      return response.data;
+    },
+    () => mockAdminAPI.updateOrderStatus?.(id, status)
+  );
+
+export const updateOrder = async (id, payload) =>
+  withMockFallback(
+    async () => {
+      const response = await api.patch(`/api/admin/orders/${id}`, payload);
+      return response.data;
+    },
+    () => mockAdminAPI.updateOrder?.(id, payload)
+  );
+
 const orders = {
-  list: async (params = {}) => {
-    const response = await api.get("/api/admin/orders", { params });
-    return response.data;
-  },
-  updateStatus: async (id, status) => {
-    const response = await api.patch(`/api/admin/orders/${id}/status`, { status });
-    return response.data;
-  },
+  list: listOrders,
+  get: getOrder,
+  updateStatus: updateOrderStatus,
+  update: updateOrder,
 };
 
 const adminApi = {
