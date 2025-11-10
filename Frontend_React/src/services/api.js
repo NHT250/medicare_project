@@ -66,7 +66,32 @@ export const authAPI = {
 
 export const productsAPI = {
   getAll: async (params = {}) => {
-    const response = await api.get('/api/products', { params });
+    const {
+      page = 1,
+      limit = 20,
+      search = '',
+      category,
+      sort
+    } = params;
+
+    const requestParams = {
+      page,
+      limit
+    };
+
+    if (search) {
+      requestParams.search = search;
+    }
+
+    if (category) {
+      requestParams.category = category;
+    }
+
+    if (sort) {
+      requestParams.sort = sort;
+    }
+
+    const response = await api.get('/api/products', { params: requestParams });
     return response.data;
   },
   

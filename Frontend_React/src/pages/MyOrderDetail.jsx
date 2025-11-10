@@ -17,15 +17,49 @@ const formatMoney = (value) => {
   return moneyFormatter.format(amount);
 };
 
+const STATUS_MAP = {
+  Pending: 'pending',
+  Confirmed: 'processing',
+  Delivered: 'delivered',
+  Cancelled: 'cancelled'
+};
+
+const STATUS_LABELS = {
+  pending: 'Pending',
+  processing: 'Processing',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled'
+};
+
+const normaliseStatusKey = (status) => {
+  if (!status) {
+    return 'pending';
+  }
+  const raw = status.toString().trim();
+  if (!raw) {
+    return 'pending';
+  }
+  if (STATUS_MAP[raw]) {
+    return STATUS_MAP[raw];
+  }
+  const canonical = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+  if (STATUS_MAP[canonical]) {
+    return STATUS_MAP[canonical];
+  }
+  return raw.toLowerCase();
+};
+
 const statusClass = (status) => {
   const map = {
     pending: 'bg-warning text-dark',
-    confirmed: 'bg-primary',
+    processing: 'bg-primary',
+    shipped: 'bg-primary',
     delivered: 'bg-success',
     cancelled: 'bg-danger'
   };
 
-  const key = (status || '').toLowerCase();
+  const key = normaliseStatusKey(status);
   return `badge ${map[key] || 'bg-secondary'}`;
 };
 
@@ -150,7 +184,9 @@ const MyOrderDetail = () => {
               {updatedLabel && <span className="ms-2">({updatedLabel})</span>}
             </div>
           </div>
-          <span className={statusClass(order.status)}>{order.status || 'Pending'}</span>
+          <span className={statusClass(order.status)}>
+            {STATUS_LABELS[normaliseStatusKey(order.status)] || order.status || 'Pending'}
+          </span>
         </div>
 
         <div className="mt-4">
@@ -158,7 +194,7 @@ const MyOrderDetail = () => {
             <i className="fas fa-arrow-left me-2"></i>
             Back to Orders
           </button>
-          {order.status && order.status.toLowerCase() === 'pending' && (
+          {normaliseStatusKey(order.status) === 'pending' && (
             <button
               className="btn btn-danger"
               onClick={handleCancelOrder}

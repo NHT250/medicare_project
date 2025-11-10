@@ -68,7 +68,9 @@ const AdminUserEditor = () => {
     }
     const loadOrders = async () => {
       try {
-        const response = await adminApi.orders.list({ user_id: user._id });
+        const response = await adminApi.orders.list({
+          user_id: user._id || user.id || id
+        });
         setOrders(response.items || []);
       } catch (err) {
         console.error("Failed to load user orders", err);

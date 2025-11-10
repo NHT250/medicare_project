@@ -1,7 +1,8 @@
 # Medicare Backend API - Flask Application
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from pymongo import MongoClient
+from pymongo import ASCENDING, DESCENDING, MongoClient
+from pymongo.errors import DuplicateKeyError
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
@@ -17,6 +18,9 @@ from routes.admin_orders import admin_orders_bp
 from routes.admin_uploads import admin_uploads_bp
 from utils.auth import token_required
 from utils.helpers import serialize_doc
+
+SHIPPING_FLAT_RATE = 5.0
+TAX_RATE = 0.08
 
 
 def order_to_dict(order):
@@ -131,6 +135,12 @@ CORS(app,
 # Connect to MongoDB
 client = MongoClient(Config.MONGODB_URI)
 db = client[Config.DATABASE_NAME]
+
+# Ensure critical indexes exist for data integrity and uniqueness
+try:
+    db.users.create_index("email", unique=True)
+except Exception as exc:  # pragma: no cover - log but continue startup
+    print(f"Warning: failed to ensure unique index on users.email: {exc}")
 app.mongo_db = db
 
 app.register_blueprint(admin_bp)
@@ -263,18 +273,64 @@ def login():
 @app.route('/api/products', methods=['GET'])
 def get_products():
     try:
-        # Get query parameters
-        category = request.args.get('category')
-        limit = int(request.args.get('limit', 20))
-        
+        try:
+            page = max(int(request.args.get('page', 1)), 1)
+        except (TypeError, ValueError):
+            page = 1
+
+        try:
+            limit = int(request.args.get('limit', 20))
+        except (TypeError, ValueError):
+            limit = 20
+        limit = min(max(limit, 1), 100)
+
+        search = (request.args.get('search') or '').strip()
+        category = (request.args.get('category') or '').strip()
+        sort_param = (request.args.get('sort') or 'newest').strip().lower()
+
         query = {}
         if category:
             query['category'] = category
-        
-        products = list(db.products.find(query).limit(limit))
-        
+        if search:
+            query['name'] = {'$regex': search, '$options': 'i'}
+
+        sort_field = 'createdAt'
+        sort_direction = DESCENDING
+
+        if sort_param in {'price', 'price_asc', 'price:asc', 'price-asc', 'price_low'}:
+            sort_field = 'price'
+            sort_direction = ASCENDING
+        elif sort_param in {'price_desc', 'price:desc', 'price-desc'}:
+            sort_field = 'price'
+            sort_direction = DESCENDING
+        elif sort_param in {'name', 'name_asc', 'name:asc'}:
+            sort_field = 'name'
+            sort_direction = ASCENDING
+        elif sort_param in {'name_desc', 'name:desc'}:
+            sort_field = 'name'
+            sort_direction = DESCENDING
+        elif sort_param in {'oldest', 'created_at', 'created_at_asc'}:
+            sort_field = 'createdAt'
+            sort_direction = ASCENDING
+        elif sort_param in {'newest', 'created_at_desc'}:
+            sort_field = 'createdAt'
+            sort_direction = DESCENDING
+
+        total = db.products.count_documents(query)
+        skip = (page - 1) * limit
+        products_cursor = (
+            db.products.find(query)
+            .sort(sort_field, sort_direction)
+            .skip(skip)
+            .limit(limit)
+        )
+        products = [serialize_doc(product) for product in products_cursor]
+
         return jsonify({
-            'products': [serialize_doc(product) for product in products],
+            'products': products,
+            'total': total,
+            'page': page,
+            'limit': limit,
             'count': len(products)
         })
         
@@ -325,7 +381,6 @@ def get_cart(current_user):
 @token_required
 def add_to_cart(current_user):
     try:
-        data = request.json
         user_id = str(current_user['_id'])
         
         # Get product
@@ -401,25 +456,130 @@ def create_order(current_user):
         # Generate order ID
         order_id = f"ORD{datetime.now().strftime('%Y%m%d%H%M%S')}"
 
+        payload = request.get_json(force=True, silent=True) or {}
+        raw_items = payload.get('items') or []
+
+        if not isinstance(raw_items, list) or not raw_items:
+            return jsonify({'error': 'Order items are required'}), 400
+
+        validated_items = []
+        stock_requirements = []
+        subtotal = 0.0
+
+        for raw_item in raw_items:
+            product_identifier = (
+                raw_item.get('productId')
+                or raw_item.get('product_id')
+                or raw_item.get('id')
+            )
+            if not product_identifier:
+                return jsonify({'error': 'Each item must include a productId'}), 400
+
+            try:
+                product_object_id = ObjectId(product_identifier)
+            except (InvalidId, TypeError):
+                return jsonify({'error': 'Invalid product identifier supplied'}), 400
+
+            try:
+                quantity = int(raw_item.get('quantity', 0))
+            except (TypeError, ValueError):
+                quantity = 0
+
+            if quantity < 1:
+                return jsonify({'error': 'Quantity must be at least 1'}), 400
+
+            product = db.products.find_one({'_id': product_object_id})
+            if not product:
+                return jsonify({'error': 'Product not found'}), 404
+
+            price = float(product.get('price', 0))
+            if price < 0:
+                return jsonify({'error': f"Invalid price configured for {product.get('name', 'product')}"}), 400
+
+            available_stock = int(product.get('stock') or 0)
+            if available_stock < quantity:
+                return jsonify({'message': f"Out of stock for {product.get('name', 'product')}"}), 400
+
+            line_total = round(price * quantity, 2)
+            subtotal += line_total
+
+            images = product.get('images')
+            if not isinstance(images, list):
+                images = []
+            primary_image = images[0] if images else product.get('image')
+
+            validated_items.append({
+                'productId': str(product['_id']),
+                'name': product.get('name'),
+                'image': primary_image,
+                'price': price,
+                'quantity': quantity,
+                'subtotal': line_total
+            })
+            stock_requirements.append({
+                'product_id': product_object_id,
+                'quantity': quantity,
+                'name': product.get('name')
+            })
+
+        subtotal = round(subtotal, 2)
+        shipping_fee = SHIPPING_FLAT_RATE if subtotal > 0 else 0.0
+        tax = round(subtotal * TAX_RATE, 2)
+        total = round(subtotal + shipping_fee + tax, 2)
+
+        shipping_info = payload.get('shipping') or {}
+        payment_info = payload.get('payment') or {}
+        if not isinstance(shipping_info, dict):
+            shipping_info = {}
+        if not isinstance(payment_info, dict):
+            payment_info = {}
+
         order = {
             'orderId': order_id,
             'userId': user_id,
-            'items': data['items'],
-            'shipping': data['shipping'],
-            'payment': data['payment'],
-            'subtotal': data['subtotal'],
-            'shippingFee': data['shippingFee'],
-            'tax': data['tax'],
-            'total': data['total'],
-            'status': 'pending',
-            'createdAt': datetime.now(),
-            'updatedAt': datetime.now()
+            'items': validated_items,
+            'shipping': shipping_info,
+            'payment': payment_info,
+            'subtotal': subtotal,
+            'shippingFee': shipping_fee,
+            'tax': tax,
+            'total': total,
+            'status': 'Pending',
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow()
         }
 
-        result = db.orders.insert_one(order)
-        order['_id'] = str(result.inserted_id)
+        decremented = []
+        try:
+            for requirement in stock_requirements:
+                result = db.products.update_one(
+                    {
+                        '_id': requirement['product_id'],
+                        'stock': {'$gte': requirement['quantity']}
+                    },
+                    {'$inc': {'stock': -requirement['quantity']}}
+                )
+                if result.modified_count == 0:
+                    # Rollback any prior stock updates before returning an error
+                    for change in decremented:
+                        db.products.update_one(
+                            {'_id': change['product_id']},
+                            {'$inc': {'stock': change['quantity']}}
+                        )
+                    return jsonify({'message': f"Out of stock for {requirement['name'] or 'product'}"}), 400
+                decremented.append(requirement)
 
-        return jsonify({'message': 'Order created successfully', 'order': serialize_doc(order)}), 201
+            result = db.orders.insert_one(order)
+            order['_id'] = str(result.inserted_id)
+
+            return jsonify({'message': 'Order created successfully', 'order': serialize_doc(order)}), 201
+        except Exception:
+            for change in decremented:
+                db.products.update_one(
+                    {'_id': change['product_id']},
+                    {'$inc': {'stock': change['quantity']}}
+                )
+            raise
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -514,38 +674,41 @@ def update_user_profile(current_user):
         data = request.json
         user_id = current_user['_id']
         
-        # Prepare update data
-        update_data = {
-            'updatedAt': datetime.now()
-        }
-        
-        # Update allowed fields only
+        update_fields = {}
+
         allowed_fields = ['name', 'phone', 'address']
         for field in allowed_fields:
             if field in data:
-                update_data[field] = data[field]
-        
-        # Update user in database
-        result = db.users.update_one(
-            {'_id': user_id},
-            {'$set': update_data}
-        )
-        
-        if result.modified_count > 0:
-            # Get updated user
-            updated_user = db.users.find_one({'_id': user_id})
-            updated_user = serialize_doc(updated_user)
-            updated_user.pop('password', None)
-            
-            return jsonify({
-                'message': 'Profile updated successfully',
-                'user': updated_user
-            })
-        else:
+                update_fields[field] = data[field]
+
+        new_email = data.get('email')
+        current_email = current_user.get('email')
+        if new_email and new_email != current_email:
+            if db.users.find_one({'email': new_email, '_id': {'$ne': user_id}}):
+                return jsonify({'message': 'Email already exists'}), 400
+            update_fields['email'] = new_email
+
+        if not update_fields:
             return jsonify({
                 'message': 'No changes made',
                 'user': serialize_doc(current_user)
             })
+
+        update_fields['updatedAt'] = datetime.utcnow()
+
+        try:
+            db.users.update_one({'_id': user_id}, {'$set': update_fields})
+        except DuplicateKeyError:
+            return jsonify({'message': 'Email already exists'}), 400
+
+        updated_user = db.users.find_one({'_id': user_id})
+        updated_user = serialize_doc(updated_user)
+        updated_user.pop('password', None)
+
+        return jsonify({
+            'message': 'Profile updated successfully',
+            'user': updated_user
+        })
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

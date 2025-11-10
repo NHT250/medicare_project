@@ -40,17 +40,36 @@ const Products = () => {
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
+      const sortMapping = {
+        popularity: 'newest',
+        'price-low': 'price_asc',
+        'price-high': 'price_desc',
+        rating: 'newest',
+        name: 'name_asc'
+      };
+
+      const sortParam = sortMapping[filters.sortBy] || 'newest';
       const params = {
         limit: itemsPerPage,
         page: currentPage,
         ...(filters.category !== 'all' && { category: filters.category }),
-        ...(filters.search && { search: filters.search })
+        ...(filters.search && { search: filters.search }),
+        sort: sortParam
       };
 
       const data = await productsAPI.getAll(params);
       if (data.products) {
         setProducts(data.products);
-        setTotalProducts(data.count || data.products.length);
+        const totalFromApi =
+          typeof data.total === 'number'
+            ? data.total
+            : typeof data.count === 'number'
+            ? data.count
+            : data.products.length;
+        setTotalProducts(totalFromApi);
+        if (typeof data.page === 'number' && data.page !== currentPage) {
+          setCurrentPage(data.page);
+        }
       }
     } catch (error) {
       console.error('Error loading products:', error);
@@ -79,6 +98,7 @@ const Products = () => {
 
   const handleSortChange = (e) => {
     setFilters({ ...filters, sortBy: e.target.value });
+    setCurrentPage(1);
   };
 
   const renderStars = (rating) => {
