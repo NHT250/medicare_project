@@ -30,21 +30,21 @@ export default function ImagePicker({ images = [], setImages }) {
     }
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      window.alert("Định dạng ảnh không được hỗ trợ");
+      window.alert("Unsupported image format");
       event.target.value = "";
       return;
     }
 
     const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > MAX_SIZE_MB) {
-      window.alert(`Kích thước ảnh tối đa ${MAX_SIZE_MB}MB`);
+      window.alert(`Maximum image size is ${MAX_SIZE_MB}MB`);
       event.target.value = "";
       return;
     }
 
     const token = localStorage.getItem(config.STORAGE_KEYS.TOKEN);
     if (!token) {
-      window.alert("Vui lòng đăng nhập lại để upload ảnh");
+      window.alert("Please sign in again to upload images");
       event.target.value = "";
       return;
     }
@@ -65,12 +65,12 @@ export default function ImagePicker({ images = [], setImages }) {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.message || "Upload thất bại");
+        throw new Error(data?.message || "Upload failed");
       }
 
       setImages([...(images || []), data.url]);
     } catch (error) {
-      window.alert(error.message || "Không thể upload ảnh");
+      window.alert(error.message || "Unable to upload image");
     } finally {
       setIsUploading(false);
       event.target.value = "";
@@ -82,7 +82,7 @@ export default function ImagePicker({ images = [], setImages }) {
       return;
     }
     if (!validateImageLink(linkValue.trim())) {
-      window.alert("Link không phải ảnh hợp lệ");
+      window.alert("The link is not a valid image");
       return;
     }
     setImages([...(images || []), linkValue.trim()]);
@@ -131,7 +131,7 @@ export default function ImagePicker({ images = [], setImages }) {
             className={`btn btn-sm ${activeTab === "link" ? "btn-primary" : "btn-outline-primary"}`}
             onClick={() => setActiveTab("link")}
           >
-            <i className="fas fa-link me-1" /> Thêm bằng link
+            <i className="fas fa-link me-1" /> Add from link
           </button>
         </div>
       </div>
@@ -146,10 +146,10 @@ export default function ImagePicker({ images = [], setImages }) {
             disabled={isUploading}
           />
           {isUploading && (
-            <div className="form-text text-primary">Đang upload...</div>
+            <div className="form-text text-primary">Uploading...</div>
           )}
           <div className="form-text">
-            Hỗ trợ JPG, PNG, GIF, WEBP. Kích thước tối đa {MAX_SIZE_MB}MB.
+            Supports JPG, PNG, GIF, and WEBP. Maximum size {MAX_SIZE_MB}MB.
           </div>
         </div>
       ) : (
@@ -163,10 +163,10 @@ export default function ImagePicker({ images = [], setImages }) {
               onChange={(event) => setLinkValue(event.target.value)}
             />
             <button type="button" className="btn btn-outline-primary" onClick={handleAddLink}>
-              Thêm
+              Add
             </button>
           </div>
-          <div className="form-text">Dán URL trực tiếp tới ảnh (JPG, PNG, GIF, WEBP).</div>
+          <div className="form-text">Paste a direct image URL (JPG, PNG, GIF, WEBP).</div>
         </div>
       )}
 
@@ -175,12 +175,12 @@ export default function ImagePicker({ images = [], setImages }) {
           {previewImage ? (
             <img
               src={previewImage}
-              alt="Ảnh đại diện"
+              alt="Primary image"
               className="img-fluid rounded"
               style={{ maxHeight: 260, objectFit: "contain" }}
             />
           ) : (
-            <span className="text-muted">Chưa có hình ảnh</span>
+            <span className="text-muted">No images yet</span>
           )}
         </div>
       </div>
@@ -191,7 +191,7 @@ export default function ImagePicker({ images = [], setImages }) {
             <div className="border rounded position-relative p-1 h-100">
               <img
                 src={url}
-                alt={`Ảnh ${index + 1}`}
+                alt={`Image ${index + 1}`}
                 className="w-100 rounded"
                 style={{ height: 120, objectFit: "cover" }}
                 onClick={() => setAsPrimary(index)}
@@ -199,14 +199,14 @@ export default function ImagePicker({ images = [], setImages }) {
               <div className="d-flex justify-content-between align-items-center mt-2">
                 <div>
                   {index === 0 ? (
-                    <span className="badge bg-primary">Ảnh đại diện</span>
+                    <span className="badge bg-primary">Primary Image</span>
                   ) : (
                     <button
                       type="button"
                       className="btn btn-link btn-sm p-0"
                       onClick={() => setAsPrimary(index)}
                     >
-                      Đặt làm đại diện
+                      Set as primary
                     </button>
                   )}
                 </div>
@@ -216,7 +216,7 @@ export default function ImagePicker({ images = [], setImages }) {
                     className="btn btn-outline-secondary"
                     onClick={() => moveImage(index, -1)}
                     disabled={index === 0}
-                    title="Di chuyển lên"
+                    title="Move up"
                   >
                     <i className="fas fa-arrow-up" />
                   </button>
@@ -225,7 +225,7 @@ export default function ImagePicker({ images = [], setImages }) {
                     className="btn btn-outline-secondary"
                     onClick={() => moveImage(index, 1)}
                     disabled={index === images.length - 1}
-                    title="Di chuyển xuống"
+                    title="Move down"
                   >
                     <i className="fas fa-arrow-down" />
                   </button>
@@ -233,7 +233,7 @@ export default function ImagePicker({ images = [], setImages }) {
                     type="button"
                     className="btn btn-outline-danger"
                     onClick={() => removeImage(index)}
-                    title="Xóa ảnh"
+                    title="Remove image"
                   >
                     <i className="fas fa-times" />
                   </button>

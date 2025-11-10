@@ -101,7 +101,7 @@ const Dashboard = () => {
         console.error("Failed to load dashboard data", err);
         setError(
           err?.response?.data?.error ||
-            "Không thể tải dữ liệu dashboard. Vui lòng thử lại."
+            "Unable to load dashboard data. Please try again."
         );
       } finally {
         setLoading(false);
@@ -117,7 +117,7 @@ const Dashboard = () => {
         icon: "💰",
         label: "Total Revenue",
         value: formatCurrency(summary.total_revenue),
-        description: "Đơn đã xác nhận & giao thành công",
+        description: "Confirmed and delivered orders",
         accent: "text-success",
       },
       {
@@ -143,7 +143,7 @@ const Dashboard = () => {
     return (
       <div className="text-center py-5">
         <div className="spinner-border text-primary" role="status" aria-hidden="true" />
-        <p className="text-muted mt-3 mb-0">Đang tải dữ liệu tổng quan...</p>
+        <p className="text-muted mt-3 mb-0">Loading dashboard data...</p>
       </div>
     );
   }
@@ -154,7 +154,7 @@ const Dashboard = () => {
         <div>
           <h2 className="h3 mb-1">Dashboard Overview</h2>
           <p className="text-muted mb-0">
-            Theo dõi hiệu suất kinh doanh và hoạt động gần đây.
+            Monitor business performance and recent activity.
           </p>
         </div>
       </div>
@@ -182,7 +182,7 @@ const Dashboard = () => {
             </div>
             {recentOrders.length === 0 ? (
               <div className="p-4 text-center text-muted">
-                Chưa có đơn hàng nào gần đây.
+                No recent orders.
               </div>
             ) : (
               <div className="table-responsive">
@@ -235,7 +235,7 @@ const Dashboard = () => {
             </div>
             {recentUsers.length === 0 ? (
               <div className="p-4 text-center text-muted">
-                Chưa có người dùng mới.
+                No new users yet.
               </div>
             ) : (
               <div className="table-responsive">

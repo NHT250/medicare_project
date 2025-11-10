@@ -58,7 +58,7 @@ const AdminOrderDetail = () => {
     } catch (err) {
       console.error("Failed to load order", err);
       setError(
-        err?.response?.data?.error || "Không thể tải chi tiết đơn hàng. Vui lòng thử lại."
+        err?.response?.data?.error || "Unable to load order details. Please try again."
       );
     } finally {
       setLoading(false);
@@ -84,7 +84,7 @@ const AdminOrderDetail = () => {
 
     if (nextStatus === "Cancelled") {
       const confirmed = window.confirm(
-        "Bạn có chắc muốn hủy đơn hàng này?"
+        "Are you sure you want to cancel this order?"
       );
       if (!confirmed) {
         return;
@@ -103,7 +103,7 @@ const AdminOrderDetail = () => {
       setFeedback({
         type: "danger",
         message:
-          err?.response?.data?.error || "Không thể cập nhật trạng thái đơn hàng.",
+          err?.response?.data?.error || "Unable to update the order status.",
       });
     } finally {
       setStatusUpdating(false);
@@ -120,12 +120,12 @@ const AdminOrderDetail = () => {
       const updated = await adminApi.orders.update(id, { notes });
       setOrder(updated);
       setNotes(updated.notes || "");
-      setFeedback({ type: "success", message: "Ghi chú đã được lưu." });
+      setFeedback({ type: "success", message: "Notes saved." });
     } catch (err) {
       console.error("Failed to update order", err);
       setFeedback({
         type: "danger",
-        message: err?.response?.data?.error || "Không thể cập nhật đơn hàng.",
+        message: err?.response?.data?.error || "Unable to update the order.",
       });
     } finally {
       setSavingNotes(false);
@@ -164,7 +164,7 @@ const AdminOrderDetail = () => {
           {error}
         </div>
         <button type="button" className="btn btn-outline-primary" onClick={() => navigate(-1)}>
-          <i className="fas fa-arrow-left me-2" /> Quay lại danh sách đơn
+          <i className="fas fa-arrow-left me-2" /> Back to order list
         </button>
       </div>
     );
@@ -253,7 +253,7 @@ const AdminOrderDetail = () => {
                     {items.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="text-center text-muted">
-                          Không có sản phẩm nào trong đơn hàng này.
+                          No products in this order.
                         </td>
                       </tr>
                     ) : (
@@ -308,7 +308,7 @@ const AdminOrderDetail = () => {
             <div className="card-body">
               <h5 className="card-title">Activity log</h5>
               {activityLog.length === 0 ? (
-                <p className="text-muted mb-0">Chưa có hoạt động nào.</p>
+                <p className="text-muted mb-0">No activity yet.</p>
               ) : (
                 <ul className="list-group list-group-flush">
                   {activityLog.map((entry, index) => (
@@ -425,7 +425,7 @@ const AdminOrderDetail = () => {
                 )}
                 {!showConfirm && !showDeliver && !showCancel && (
                   <p className="text-muted text-center mb-0">
-                    Không còn thao tác trạng thái nào khả dụng.
+                    No additional status actions available.
                   </p>
                 )}
               </div>

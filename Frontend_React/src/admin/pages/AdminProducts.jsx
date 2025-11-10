@@ -37,7 +37,7 @@ const AdminProducts = () => {
     } catch (err) {
       console.error("Failed to load products", err);
       setError(
-        err?.response?.data?.error || "Không thể tải danh sách sản phẩm. Vui lòng thử lại."
+        err?.response?.data?.error || "Unable to load products. Please try again."
       );
     } finally {
       setLoading(false);
@@ -67,7 +67,7 @@ const AdminProducts = () => {
   };
 
   const handleDelete = async (productId) => {
-    if (!window.confirm("Xóa sản phẩm này?")) {
+    if (!window.confirm("Delete this product?")) {
       return;
     }
     try {
@@ -75,7 +75,7 @@ const AdminProducts = () => {
       fetchProducts(pagination.page);
     } catch (err) {
       console.error("Failed to delete product", err);
-      alert(err?.response?.data?.error || "Không thể xóa sản phẩm");
+      alert(err?.response?.data?.error || "Unable to delete product");
     }
   };
 
@@ -147,10 +147,10 @@ const AdminProducts = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="h4 mb-1">Products</h2>
-          <p className="text-muted mb-0">Quản lý danh sách thuốc và vật tư y tế.</p>
+          <p className="text-muted mb-0">Manage the catalog of medications and medical supplies.</p>
         </div>
         <Link to="/admin/products/new" className="btn btn-primary">
-          <i className="fas fa-plus me-2" /> Thêm sản phẩm
+          <i className="fas fa-plus me-2" /> Add Product
         </Link>
       </div>
 
@@ -158,23 +158,23 @@ const AdminProducts = () => {
         <div className="card-body">
           <form className="row g-3 align-items-end" onSubmit={handleSearchSubmit}>
             <div className="col-md-4">
-              <label className="form-label">Tìm kiếm</label>
+              <label className="form-label">Search</label>
               <input
                 type="text"
                 className="form-control"
-                placeholder="Tên sản phẩm hoặc slug"
+                placeholder="Product name or slug"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <div className="col-md-4">
-              <label className="form-label">Danh mục</label>
+              <label className="form-label">Category</label>
               <select
                 className="form-select"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
               >
-                <option value="all">Tất cả</option>
+                <option value="all">All</option>
                 {categories.map((cat) => (
                   <option key={cat._id} value={cat.slug}>
                     {cat.name}
@@ -184,7 +184,7 @@ const AdminProducts = () => {
             </div>
             <div className="col-md-4">
               <button type="submit" className="btn btn-outline-primary me-2">
-                <i className="fas fa-search me-1" /> Tìm kiếm
+                <i className="fas fa-search me-1" /> Search
               </button>
               <button
                 type="button"
@@ -195,7 +195,7 @@ const AdminProducts = () => {
                   fetchProducts(1);
                 }}
               >
-                Đặt lại
+                Reset
               </button>
             </div>
           </form>
@@ -209,13 +209,13 @@ const AdminProducts = () => {
             <table className="table table-hover table-striped mb-0">
               <thead className="table-light">
                 <tr>
-                  <th>Tên</th>
-                  <th>Danh mục</th>
-                  <th>Giá</th>
-                  <th>Tồn kho</th>
-                  <th>Trạng thái</th>
-                  <th>Cập nhật</th>
-                  <th className="text-end">Thao tác</th>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                  <th className="text-end">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -230,7 +230,7 @@ const AdminProducts = () => {
                 ) : (
                   <tr>
                     <td colSpan="7" className="text-center py-4 text-muted">
-                      Không có sản phẩm nào.
+                      No products found.
                     </td>
                   </tr>
                 )}
@@ -240,7 +240,7 @@ const AdminProducts = () => {
         </div>
         <div className="card-footer d-flex justify-content-between align-items-center">
           <small className="text-muted">
-            Tổng {pagination.total} sản phẩm — Trang {pagination.page}/{pagination.pages}
+            Total {pagination.total} products — Page {pagination.page}/{pagination.pages}
           </small>
           <div className="btn-group">
             <button
