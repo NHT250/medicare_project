@@ -12,6 +12,7 @@ import Cart from './pages/Cart';
 import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
 import CustomerOrders from './pages/Orders';
+import MyOrderDetail from './pages/MyOrderDetail';
 import Profile from './pages/Profile';
 import Forbidden from './pages/Forbidden';
 
@@ -56,6 +57,14 @@ function App() {
                 element={
                   <RequireSignedIn>
                     <CustomerOrders />
+                  </RequireSignedIn>
+                }
+              />
+              <Route
+                path="/orders/:id"
+                element={
+                  <RequireSignedIn>
+                    <MyOrderDetail />
                   </RequireSignedIn>
                 }
               />

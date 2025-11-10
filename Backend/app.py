@@ -7,6 +7,7 @@ import jwt
 from datetime import datetime, timedelta
 from config import Config
 from bson import ObjectId
+from bson.errors import InvalidId
 import json
 import requests
 
@@ -15,6 +16,105 @@ from routes.admin_dashboard import dashboard_bp as admin_dashboard_bp
 from routes.admin_orders import admin_orders_bp
 from utils.auth import token_required
 from utils.helpers import serialize_doc
+
+
+def order_to_dict(order):
+    """Serialize an order document into an API friendly structure."""
+
+    if not order:
+        return None
+
+    serialized = serialize_doc(order)
+
+    shipping = serialized.get('shipping') or {}
+    payment = serialized.get('payment') or {}
+    items = serialized.get('items') or []
+
+    def _normalise_status(value):
+        if not value:
+            return 'Pending'
+        text = str(value)
+        if not text:
+            return 'Pending'
+        return text[0].upper() + text[1:]
+
+    def _to_number(value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _normalise_item(item):
+        item = item or {}
+        price = item.get('price') or 0
+        quantity = item.get('quantity') or 0
+        try:
+            quantity = int(quantity)
+        except (TypeError, ValueError):
+            pass
+        subtotal = item.get('subtotal')
+        if subtotal is None:
+            subtotal = price * quantity
+        return {
+            'product_id': item.get('productId')
+            or item.get('product_id')
+            or item.get('id'),
+            'name': item.get('name'),
+            'image': item.get('image') or item.get('thumbnail'),
+            'price': _to_number(price),
+            'quantity': quantity,
+            'subtotal': _to_number(subtotal),
+        }
+
+    def _normalise_shipping(value):
+        value = value or {}
+        return {
+            'full_name': value.get('full_name')
+            or value.get('fullName')
+            or value.get('recipient')
+            or '',
+            'phone': value.get('phone') or '',
+            'address': value.get('address') or '',
+            'city': value.get('city') or '',
+            'state': value.get('state') or '',
+            'zip': value.get('zip')
+            or value.get('zipCode')
+            or value.get('postalCode')
+            or '',
+            'country': value.get('country') or '',
+            'note': value.get('note') or value.get('notes') or '',
+        }
+
+    def _normalise_payment(value):
+        value = value or {}
+        method_raw = value.get('method') or value.get('type') or ''
+        status_raw = value.get('status') or ''
+
+        method = method_raw if isinstance(method_raw, str) else ''
+        if method:
+            method = method.upper() if len(method) <= 4 else method.title()
+
+        status = status_raw if isinstance(status_raw, str) else ''
+        if status:
+            status = status.title()
+
+        return {'method': method, 'status': status}
+
+    return {
+        'id': serialized.get('_id'),
+        'order_id': serialized.get('orderId') or serialized.get('order_id'),
+        'created_at': serialized.get('createdAt'),
+        'updated_at': serialized.get('updatedAt'),
+        'status': _normalise_status(serialized.get('status')),
+        'items': [_normalise_item(item) for item in items],
+        'shipping': _normalise_shipping(shipping),
+        'payment': _normalise_payment(payment),
+        'subtotal': _to_number(serialized.get('subtotal')),
+        'shipping_fee': _to_number(
+            serialized.get('shippingFee') or serialized.get('shipping_fee')
+        ),
+        'total': _to_number(serialized.get('total')),
+    }
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -295,10 +395,10 @@ def create_order(current_user):
     try:
         data = request.json
         user_id = str(current_user['_id'])
-        
+
         # Generate order ID
         order_id = f"ORD{datetime.now().strftime('%Y%m%d%H%M%S')}"
-        
+
         order = {
             'orderId': order_id,
             'userId': user_id,
@@ -313,12 +413,83 @@ def create_order(current_user):
             'createdAt': datetime.now(),
             'updatedAt': datetime.now()
         }
-        
+
         result = db.orders.insert_one(order)
         order['_id'] = str(result.inserted_id)
-        
+
         return jsonify({'message': 'Order created successfully', 'order': serialize_doc(order)}), 201
-        
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/orders/<order_id>', methods=['GET'])
+@token_required
+def get_order_detail(current_user, order_id):
+    try:
+        user_id = str(current_user['_id'])
+
+        try:
+            object_id = ObjectId(order_id)
+        except (InvalidId, TypeError):
+            return jsonify({'error': 'Order not found'}), 404
+
+        order = db.orders.find_one({'_id': object_id})
+        if not order:
+            return jsonify({'error': 'Order not found'}), 404
+
+        if order.get('userId') != user_id:
+            return (
+                jsonify({'error': 'You do not have permission to view this order'}),
+                403,
+            )
+
+        return jsonify(order_to_dict(order))
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/orders/<order_id>/status', methods=['PATCH'])
+@token_required
+def update_order_status_user(current_user, order_id):
+    try:
+        user_id = str(current_user['_id'])
+
+        try:
+            object_id = ObjectId(order_id)
+        except (InvalidId, TypeError):
+            return jsonify({'error': 'Order not found'}), 404
+
+        order = db.orders.find_one({'_id': object_id})
+        if not order:
+            return jsonify({'error': 'Order not found'}), 404
+
+        if order.get('userId') != user_id:
+            return (
+                jsonify({'error': 'You do not have permission to modify this order'}),
+                403,
+            )
+
+        current_status = str(order.get('status') or '').lower() or 'pending'
+        payload = request.get_json(force=True, silent=True) or {}
+        new_status = str(payload.get('status') or '').lower()
+
+        if new_status != 'cancelled':
+            return jsonify({'error': 'Only cancellation is supported'}), 400
+
+        if current_status != 'pending':
+            return jsonify({'error': 'Only pending orders can be cancelled'}), 400
+
+        update_doc = {
+            '$set': {'status': 'cancelled', 'updatedAt': datetime.utcnow()},
+        }
+
+        db.orders.update_one({'_id': order['_id']}, update_doc)
+        updated = db.orders.find_one({'_id': order['_id']})
+
+        return jsonify(order_to_dict(updated))
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
