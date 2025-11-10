@@ -16,12 +16,16 @@ const config = {
   // Pagination
   PRODUCTS_PER_PAGE: 8,
 
+  // Feature flags
+  USE_ADMIN_MOCKS: import.meta.env.VITE_USE_ADMIN_MOCKS === "true",
+
   // Local Storage Keys
   STORAGE_KEYS: {
     USER: "medicare_user",
     TOKEN: "medicare_token",
     CART: "medicare_cart",
     LOGGED_IN: "medicare_logged_in",
+    ROLE: "medicare_role",
   },
 };
 

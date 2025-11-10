@@ -7,12 +7,21 @@ import { CartProvider } from './contexts/CartContext';
 // Pages
 import Homepage from './pages/Homepage';
 import Auth from './pages/Auth';
-import Products from './pages/Products';
+import ProductsPage from './pages/Products';
 import Cart from './pages/Cart';
 import ProductDetail from './pages/ProductDetail';
 import Checkout from './pages/Checkout';
-import Orders from './pages/Orders';
+import CustomerOrders from './pages/Orders';
 import Profile from './pages/Profile';
+import Forbidden from './pages/Forbidden';
+
+import AdminLayout from './admin/AdminLayout';
+import { RequireAdmin, RequireSignedIn } from './guards';
+import Dashboard from './admin/pages/Dashboard';
+import AdminProducts from './admin/pages/AdminProducts';
+import AdminProductEditor from './admin/pages/AdminProductEditor';
+import AdminUsers from './admin/pages/AdminUsers';
+import AdminUserEditor from './admin/pages/AdminUserEditor';
 
 // Import Bootstrap CSS
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -29,13 +38,51 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Homepage />} />
               <Route path="/login" element={<Auth />} />
-              <Route path="/products" element={<Products />} />
+              <Route path="/products" element={<ProductsPage />} />
               <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/profile" element={<Profile />} />
-              
+              <Route
+                path="/checkout"
+                element={
+                  <RequireSignedIn>
+                    <Checkout />
+                  </RequireSignedIn>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <RequireSignedIn>
+                    <CustomerOrders />
+                  </RequireSignedIn>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <RequireSignedIn>
+                    <Profile />
+                  </RequireSignedIn>
+                }
+              />
+              <Route path="/403" element={<Forbidden />} />
+
+              <Route
+                path="/admin/*"
+                element={
+                  <RequireAdmin>
+                    <AdminLayout />
+                  </RequireAdmin>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="products/new" element={<AdminProductEditor mode="create" />} />
+                <Route path="products/:id/edit" element={<AdminProductEditor mode="edit" />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="users/:id" element={<AdminUserEditor />} />
+              </Route>
+
               {/* Redirect unknown routes to homepage */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

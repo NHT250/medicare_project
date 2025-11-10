@@ -85,6 +85,12 @@ cd Frontend_React
 npm run dev
 ```
 
+> 💡 *Không có backend sẵn?* Bạn vẫn có thể demo toàn bộ admin panel bằng mock data:
+>
+> ```bash
+> VITE_USE_ADMIN_MOCKS=true npm run dev
+> ```
+
 Sẽ thấy:
 ```
   VITE v7.1.7  ready in 500 ms
@@ -97,6 +103,39 @@ Sẽ thấy:
 ### **Bước 6: Mở Trình Duyệt**
 
 Truy cập: **http://localhost:5173**
+
+---
+
+## 🛡️ ĐĂNG NHẬP & PHÂN QUYỀN
+
+- Tài khoản admin mẫu: **admin@medicare.com / Admin@123** (được seed trong `Backend/seed_data.py`).
+- Tất cả người dùng đăng nhập chung trang **/login**.
+- Sau khi đăng nhập:
+  - `role === "admin"` → tự động chuyển tới `/admin` (vẫn truy cập storefront).
+  - `role === "customer"` → ở lại cửa hàng.
+- `token` và `role` được lưu vào `localStorage` để kích hoạt `RequireSignedIn` & `RequireAdmin`.
+
+---
+
+## 📊 ADMIN PANEL
+
+### Các tuyến đường chính
+
+| Đường dẫn | Mô tả |
+|-----------|-------|
+| `/admin` | Bảng điều khiển tổng quan |
+| `/admin/products` | Quản lý sản phẩm (CRUD, tìm kiếm, phân trang) |
+| `/admin/products/new` | Tạo sản phẩm mới với bố cục giống ProductDetail |
+| `/admin/products/:id/edit` | Chỉnh sửa sản phẩm hiện có |
+| `/admin/users` | Danh sách người dùng (lọc, ban/unban, phân trang) |
+| `/admin/users/:id` | Trình chỉnh sửa chi tiết giống Profile |
+
+### Tính năng nổi bật
+
+- API `/api/admin/*` được bảo vệ bởi `@token_required` + `@admin_required`.
+- Trình chỉnh sửa sản phẩm hỗ trợ quản lý danh sách ảnh, slug tự sinh, mô tả & thông số kỹ thuật.
+- Trình chỉnh sửa người dùng cho phép cập nhật thông tin cá nhân, đổi vai trò, ban/unban, reset mật khẩu và xem lịch sử đơn hàng.
+- Thanh hành động dính với các nút **Save**, **Save & Close** cùng cảnh báo khi có thay đổi chưa lưu.
 
 ---
 

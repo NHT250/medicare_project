@@ -34,6 +34,7 @@ api.interceptors.response.use(
       localStorage.removeItem('medicare_token');
       localStorage.removeItem('medicare_user');
       localStorage.removeItem('medicare_logged_in');
+      localStorage.removeItem('medicare_role');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -57,6 +58,7 @@ export const authAPI = {
     localStorage.removeItem('medicare_token');
     localStorage.removeItem('medicare_user');
     localStorage.removeItem('medicare_logged_in');
+    localStorage.removeItem('medicare_role');
   }
 };
 

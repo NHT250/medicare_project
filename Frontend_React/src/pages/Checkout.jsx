@@ -424,7 +424,7 @@ const Checkout = () => {
                       <div className="d-flex justify-content-between align-items-center">
                         <div className="d-flex align-items-center">
                           <img
-                            src={item.image}
+                            src={item.image || item.images?.[0] || 'https://via.placeholder.com/80'}
                             alt={item.name}
                             className="item-image"
                           />

@@ -9,7 +9,11 @@ from config import Config
 from bson import ObjectId
 import json
 import requests
-from functools import wraps
+
+from routes.admin import admin_bp
+from routes.admin_dashboard import dashboard_bp as admin_dashboard_bp
+from utils.auth import token_required
+from utils.helpers import serialize_doc
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -25,14 +29,10 @@ CORS(app,
 # Connect to MongoDB
 client = MongoClient(Config.MONGODB_URI)
 db = client[Config.DATABASE_NAME]
+app.mongo_db = db
 
-# Helper function to convert ObjectId to string
-def serialize_doc(doc):
-    if doc is None:
-        return None
-    if isinstance(doc, dict):
-        doc['_id'] = str(doc['_id'])
-    return doc
+app.register_blueprint(admin_bp)
+app.register_blueprint(admin_dashboard_bp)
 
 # Helper function to verify reCAPTCHA
 def verify_recaptcha(recaptcha_token):
@@ -50,42 +50,6 @@ def verify_recaptcha(recaptcha_token):
     except Exception as e:
         print(f'reCAPTCHA verification error: {str(e)}')
         return False
-
-# JWT Token Required Decorator
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = None
-        
-        # Get token from Authorization header
-        if 'Authorization' in request.headers:
-            auth_header = request.headers['Authorization']
-            try:
-                token = auth_header.split(' ')[1]  # Bearer <token>
-            except IndexError:
-                return jsonify({'error': 'Invalid token format'}), 401
-        
-        if not token:
-            return jsonify({'error': 'Token is missing'}), 401
-        
-        try:
-            # Decode token
-            data = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=[Config.JWT_ALGORITHM])
-            current_user = db.users.find_one({'_id': ObjectId(data['user_id'])})
-            
-            if not current_user:
-                return jsonify({'error': 'User not found'}), 401
-                
-        except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token has expired'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'error': 'Invalid token'}), 401
-        except Exception as e:
-            return jsonify({'error': 'Token verification failed'}), 401
-        
-        return f(current_user, *args, **kwargs)
-    
-    return decorated
 
 # ============ ROUTES ============
 
@@ -129,8 +93,10 @@ def register():
             'name': data.get('name', ''),
             'phone': data.get('phone', ''),
             'address': data.get('address', {}),
-            'createdAt': datetime.now(),
-            'updatedAt': datetime.now()
+            'role': 'customer',
+            'is_banned': False,
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow()
         }
         
         result = db.users.insert_one(user)
@@ -156,23 +122,32 @@ def login():
         user = db.users.find_one({'email': data['email']})
         if not user:
             return jsonify({'error': 'Invalid credentials'}), 401
+
+        if user.get('is_banned'):
+            return jsonify({'error': 'Account is banned'}), 403
         
         # Check password
         if not bcrypt.checkpw(data['password'].encode('utf-8'), user['password'].encode('utf-8')):
             return jsonify({'error': 'Invalid credentials'}), 401
         
         # Generate JWT token
+        role = user.get('role', 'customer')
+
         token = jwt.encode({
             'user_id': str(user['_id']),
             'email': user['email'],
+            'role': role,
             'exp': datetime.utcnow() + timedelta(seconds=Config.JWT_EXPIRATION_DELTA)
         }, Config.JWT_SECRET_KEY, algorithm=Config.JWT_ALGORITHM)
-        
+
         user.pop('password')
-        
+
         return jsonify({
             'message': 'Login successful',
             'token': token,
+            'role': role,
+            'name': user.get('name', ''),
+            'email': user['email'],
             'user': serialize_doc(user)
         })
         

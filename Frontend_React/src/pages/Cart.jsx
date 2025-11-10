@@ -61,7 +61,7 @@ const Cart = () => {
                       <div className="row align-items-center">
                         <div className="col-md-2">
                           <img
-                            src={item.image}
+                            src={item.image || item.images?.[0] || 'https://via.placeholder.com/120'}
                             alt={item.name}
                             className="img-fluid rounded"
                           />

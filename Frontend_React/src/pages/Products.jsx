@@ -161,53 +161,61 @@ const Products = () => {
               </div>
             ) : products.length > 0 ? (
               <div className="row g-4">
-                {products.map((product) => (
-                  <div key={product._id} className="col-lg-3 col-md-6">
-                    <div className="product-card">
-                      <div
-                        className="product-image"
-                        onClick={() => navigate(`/product/${product._id}`)}
-                      >
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="img-fluid"
-                        />
-                        {product.inStock ? (
-                          <div className="stock-badge in-stock">In Stock</div>
-                        ) : (
-                          <div className="stock-badge out-of-stock">Out of Stock</div>
-                        )}
-                      </div>
-                      <div className="product-info">
-                        <h6 className="product-name">{product.name}</h6>
-                        <p className="product-description">{product.description}</p>
-                        <div className="product-rating mb-2">
-                          <div className="stars">
-                            {renderStars(product.rating || 0)}
-                          </div>
-                          <span className="rating-text">({product.reviews || 0})</span>
-                        </div>
-                        <div className="price-section mb-2">
-                          <span className="current-price">${product.price.toFixed(2)}</span>
-                          {product.oldPrice && (
-                            <span className="old-price">${product.oldPrice.toFixed(2)}</span>
+                {products.map((product) => {
+                  const basePrice = Number(product.price || 0);
+                  const discount = Number(product.discount || 0);
+                  const finalPrice = discount ? basePrice * (1 - discount / 100) : basePrice;
+                  const primaryImage = product.images?.[0] || "https://via.placeholder.com/300x300";
+                  const inStock = product.stock > 0 && product.is_active !== false;
+
+                  return (
+                    <div key={product._id} className="col-lg-3 col-md-6">
+                      <div className="product-card">
+                        <div
+                          className="product-image"
+                          onClick={() => navigate(`/product/${product._id}`)}
+                        >
+                          <img src={primaryImage} alt={product.name} className="img-fluid" />
+                          {inStock ? (
+                            <div className="stock-badge in-stock">In Stock</div>
+                          ) : (
+                            <div className="stock-badge out-of-stock">Out of Stock</div>
                           )}
                         </div>
-                        <div className="product-actions">
-                          <button
-                            className="btn btn-success w-100"
-                            onClick={() => handleAddToCart(product)}
-                            disabled={!product.inStock}
-                          >
-                            <i className="fas fa-shopping-cart me-1"></i>
-                            {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                          </button>
+                        <div className="product-info">
+                          <h6 className="product-name">{product.name}</h6>
+                          <p className="product-description">{product.description}</p>
+                          <div className="product-rating mb-2">
+                            <div className="stars">{renderStars(product.rating || 0)}</div>
+                            <span className="rating-text">({product.reviews || 0})</span>
+                          </div>
+                          <div className="price-section mb-2">
+                            <span className="current-price">${finalPrice.toFixed(2)}</span>
+                            {discount ? (
+                              <span className="old-price">${basePrice.toFixed(2)}</span>
+                            ) : null}
+                          </div>
+                          <div className="product-actions">
+                            <button
+                              className="btn btn-success w-100"
+                              onClick={() =>
+                                handleAddToCart({
+                                  ...product,
+                                  price: finalPrice,
+                                  image: primaryImage,
+                                })
+                              }
+                              disabled={!inStock}
+                            >
+                              <i className="fas fa-shopping-cart me-1"></i>
+                              {inStock ? 'Add to Cart' : 'Unavailable'}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-5">
