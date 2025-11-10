@@ -17,6 +17,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -24,18 +25,42 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const storedToken = localStorage.getItem(config.STORAGE_KEYS.TOKEN);
     const storedUser = localStorage.getItem(config.STORAGE_KEYS.USER);
+    const storedRole = localStorage.getItem(config.STORAGE_KEYS.ROLE);
     const isLoggedIn =
       localStorage.getItem(config.STORAGE_KEYS.LOGGED_IN) === "true";
 
     if (storedToken && storedUser && isLoggedIn) {
       try {
+        const parsedUser = JSON.parse(storedUser);
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        setUser(parsedUser);
+        setRole(storedRole || parsedUser?.role || "customer");
         setIsAuthenticated(true);
       } catch (error) {
         console.error("Error parsing user data:", error);
         logout();
       }
+    } else if (config.USE_ADMIN_MOCKS) {
+      const mockAdminUser = {
+        _id: "mock-admin-id",
+        name: "Admin Demo",
+        email: "admin@medicare.com",
+        role: "admin",
+        is_banned: false,
+      };
+
+      localStorage.setItem(
+        config.STORAGE_KEYS.USER,
+        JSON.stringify(mockAdminUser)
+      );
+      localStorage.setItem(config.STORAGE_KEYS.TOKEN, "mock-admin-token");
+      localStorage.setItem(config.STORAGE_KEYS.LOGGED_IN, "true");
+      localStorage.setItem(config.STORAGE_KEYS.ROLE, "admin");
+
+      setToken("mock-admin-token");
+      setUser(mockAdminUser);
+      setRole("admin");
+      setIsAuthenticated(true);
     }
     setLoading(false);
   }, []);
@@ -45,17 +70,23 @@ export const AuthProvider = ({ children }) => {
       const data = await authAPI.login(credentials);
 
       if (data.token && data.user) {
+        const resolvedRole = data.role || data.user?.role || "customer";
+        const normalizedUser = { ...data.user, role: resolvedRole };
+        data.user = normalizedUser;
+        data.role = resolvedRole;
         // Save to localStorage
         localStorage.setItem(config.STORAGE_KEYS.TOKEN, data.token);
         localStorage.setItem(
           config.STORAGE_KEYS.USER,
-          JSON.stringify(data.user)
+          JSON.stringify(normalizedUser)
         );
         localStorage.setItem(config.STORAGE_KEYS.LOGGED_IN, "true");
+        localStorage.setItem(config.STORAGE_KEYS.ROLE, resolvedRole);
 
         // Update state
         setToken(data.token);
-        setUser(data.user);
+        setUser(normalizedUser);
+        setRole(resolvedRole);
         setIsAuthenticated(true);
 
         return { success: true, data };
@@ -97,10 +128,12 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(config.STORAGE_KEYS.USER);
     localStorage.removeItem(config.STORAGE_KEYS.LOGGED_IN);
     localStorage.removeItem(config.STORAGE_KEYS.CART);
+    localStorage.removeItem(config.STORAGE_KEYS.ROLE);
 
     // Clear state
     setToken(null);
     setUser(null);
+    setRole(null);
     setIsAuthenticated(false);
 
     authAPI.logout();
@@ -112,7 +145,7 @@ export const AuthProvider = ({ children }) => {
       ...user,
       ...updatedUserData
     };
-    
+
     setUser(newUserData);
     localStorage.setItem(config.STORAGE_KEYS.USER, JSON.stringify(newUserData));
   };
@@ -120,6 +153,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     token,
+    role,
     loading,
     isAuthenticated,
     login,

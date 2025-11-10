@@ -12,12 +12,13 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, role } = useAuth();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     loadProduct();
@@ -28,6 +29,7 @@ const ProductDetail = () => {
       setLoading(true);
       const data = await productsAPI.getById(id);
       setProduct(data);
+      setSelectedImageIndex(0);
     } catch (error) {
       console.error('Error loading product:', error);
       alert('Failed to load product details');
@@ -43,7 +45,11 @@ const ProductDetail = () => {
       return;
     }
     
-    addToCart(product, quantity);
+    const basePrice = Number(product.price || 0);
+    const discount = Number(product.discount || 0);
+    const finalPrice = discount ? basePrice * (1 - discount / 100) : basePrice;
+    const primaryImage = product.images?.[0] || product.image;
+    addToCart({ ...product, price: finalPrice, image: primaryImage }, quantity);
     alert(`${quantity} x ${product.name} added to cart!`);
   };
 
@@ -54,7 +60,11 @@ const ProductDetail = () => {
       return;
     }
     
-    addToCart(product, quantity);
+    const basePrice = Number(product.price || 0);
+    const discount = Number(product.discount || 0);
+    const finalPrice = discount ? basePrice * (1 - discount / 100) : basePrice;
+    const primaryImage = product.images?.[0] || product.image;
+    addToCart({ ...product, price: finalPrice, image: primaryImage }, quantity);
     navigate('/cart');
   };
 
@@ -119,6 +129,13 @@ const ProductDetail = () => {
     );
   }
 
+  const basePrice = Number(product.price || 0);
+  const discount = Number(product.discount || 0);
+  const finalPrice = discount ? basePrice * (1 - discount / 100) : basePrice;
+  const inStock = (product.stock ?? 0) > 0 && product.is_active !== false;
+  const galleryImages = product.images?.length ? product.images : product.image ? [product.image] : [];
+  const mainImage = galleryImages[selectedImageIndex] || 'https://via.placeholder.com/600x600?text=No+Image';
+
   return (
     <div className="product-detail-page">
       <Navbar />
@@ -141,13 +158,13 @@ const ProductDetail = () => {
         <div className="row">
           {/* Product Image */}
           <div className="col-lg-5 mb-4">
-            <div className="product-image-container">
+            <div className="product-image-container mb-3">
               <img
-                src={product.image}
+                src={mainImage}
                 alt={product.name}
                 className="img-fluid rounded"
               />
-              {product.inStock ? (
+              {(product.stock ?? 0) > 0 ? (
                 <div className="stock-badge in-stock">
                   <i className="fas fa-check-circle me-1"></i> In Stock
                 </div>
@@ -157,12 +174,41 @@ const ProductDetail = () => {
                 </div>
               )}
             </div>
+            {galleryImages.length > 1 && (
+              <div className="d-flex flex-wrap gap-2">
+                {galleryImages.map((img, index) => (
+                  <button
+                    key={img}
+                    type="button"
+                    className={`btn p-0 border ${selectedImageIndex === index ? 'border-primary' : ''}`}
+                    onClick={() => setSelectedImageIndex(index)}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} ${index + 1}`}
+                      style={{ width: 80, height: 80, objectFit: 'cover' }}
+                      className="rounded"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
           <div className="col-lg-7">
             <div className="product-info-container">
-              <h2 className="product-title">{product.name}</h2>
+              <div className="d-flex justify-content-between align-items-start">
+                <h2 className="product-title">{product.name}</h2>
+                {role === 'admin' && (
+                  <button
+                    className="btn btn-outline-primary"
+                    onClick={() => navigate(`/admin/products/${product._id}/edit`)}
+                  >
+                    <i className="fas fa-edit me-2"></i> Edit Product
+                  </button>
+                )}
+              </div>
               
               {/* Rating */}
               <div className="rating-section mb-3">
@@ -176,15 +222,13 @@ const ProductDetail = () => {
 
               {/* Price */}
               <div className="price-section mb-4">
-                <span className="current-price">${product.price.toFixed(2)}</span>
-                {product.oldPrice && (
+                <span className="current-price">${finalPrice.toFixed(2)}</span>
+                {discount ? (
                   <>
-                    <span className="old-price ms-2">${product.oldPrice.toFixed(2)}</span>
-                    <span className="discount-badge ms-2">
-                      {Math.round((1 - product.price / product.oldPrice) * 100)}% OFF
-                    </span>
+                    <span className="old-price ms-2">${basePrice.toFixed(2)}</span>
+                    <span className="discount-badge ms-2">{discount}% OFF</span>
                   </>
-                )}
+                ) : null}
               </div>
 
               {/* Short Description */}
@@ -225,7 +269,7 @@ const ProductDetail = () => {
                 <button
                   className="btn btn-success btn-lg"
                   onClick={handleAddToCart}
-                  disabled={!product.inStock}
+                  disabled={!inStock}
                 >
                   <i className="fas fa-shopping-cart me-2"></i>
                   Add to Cart
@@ -233,7 +277,7 @@ const ProductDetail = () => {
                 <button
                   className="btn btn-primary btn-lg ms-2"
                   onClick={handleBuyNow}
-                  disabled={!product.inStock}
+                  disabled={!inStock}
                 >
                   <i className="fas fa-bolt me-2"></i>
                   Buy Now
@@ -340,11 +384,11 @@ const ProductDetail = () => {
                         </tr>
                         <tr>
                           <td><strong>Price:</strong></td>
-                          <td>${product.price.toFixed(2)}</td>
+                          <td>${finalPrice.toFixed(2)}</td>
                         </tr>
                         <tr>
                           <td><strong>Stock Status:</strong></td>
-                          <td>{product.inStock ? 'In Stock' : 'Out of Stock'}</td>
+                          <td>{inStock ? 'In Stock' : 'Out of Stock'}</td>
                         </tr>
                         <tr>
                           <td><strong>Rating:</strong></td>

@@ -140,59 +140,59 @@ const Homepage = () => {
                 </div>
               </div>
             ) : featuredProducts.length > 0 ? (
-              featuredProducts.map((product) => (
-                <div key={product._id} className="col-lg-3 col-md-6">
-                  <div className="product-card">
-                    <div className="product-image">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="img-fluid"
-                        onClick={() => navigate(`/product/${product._id}`)}
-                      />
-                      {product.oldPrice && (
-                        <div className="discount-badge">
-                          -
-                          {Math.round(
-                            ((product.oldPrice - product.price) /
-                              product.oldPrice) *
-                              100
-                          )}
-                          %
+              featuredProducts.map((product) => {
+                const basePrice = Number(product.price || 0);
+                const discount = Number(product.discount || 0);
+                const finalPrice = discount ? basePrice * (1 - discount / 100) : basePrice;
+                const primaryImage = product.images?.[0] || product.image || 'https://via.placeholder.com/300x300';
+                const inStock = product.stock > 0 && product.is_active !== false;
+
+                return (
+                  <div key={product._id} className="col-lg-3 col-md-6">
+                    <div className="product-card">
+                      <div className="product-image">
+                        <img
+                          src={primaryImage}
+                          alt={product.name}
+                          className="img-fluid"
+                          onClick={() => navigate(`/product/${product._id}`)}
+                        />
+                        {discount ? (
+                          <div className="discount-badge">-{Math.round(discount)}%</div>
+                        ) : null}
+                      </div>
+                      <div className="product-info">
+                        <h6 className="product-name">{product.name}</h6>
+                        <p className="product-desc">{product.description}</p>
+                        <div className="price-section">
+                          <span className="current-price">${finalPrice.toFixed(2)}</span>
+                          {discount ? (
+                            <span className="old-price">${basePrice.toFixed(2)}</span>
+                          ) : null}
                         </div>
-                      )}
-                    </div>
-                    <div className="product-info">
-                      <h6 className="product-name">{product.name}</h6>
-                      <p className="product-desc">{product.description}</p>
-                      <div className="price-section">
-                        <span className="current-price">
-                          ${product.price.toFixed(2)}
-                        </span>
-                        {product.oldPrice && (
-                          <span className="old-price">
-                            ${product.oldPrice.toFixed(2)}
-                          </span>
-                        )}
+                        <div className="rating mb-2">
+                          <i className="fas fa-star text-warning"></i>
+                          <span className="rating-text">{product.rating}</span>
+                          <span className="review-count">({product.reviews || 0})</span>
+                        </div>
+                        <button
+                          className="btn btn-success w-100"
+                          onClick={() =>
+                            handleAddToCart({
+                              ...product,
+                              price: finalPrice,
+                              image: primaryImage,
+                            })
+                          }
+                          disabled={!inStock}
+                        >
+                          {inStock ? "Add to Cart" : "Unavailable"}
+                        </button>
                       </div>
-                      <div className="rating mb-2">
-                        <i className="fas fa-star text-warning"></i>
-                        <span className="rating-text">{product.rating}</span>
-                        <span className="review-count">
-                          ({product.reviews})
-                        </span>
-                      </div>
-                      <button
-                        className="btn btn-success w-100"
-                        onClick={() => handleAddToCart(product)}
-                        disabled={!product.inStock}
-                      >
-                        {product.inStock ? "Add to Cart" : "Out of Stock"}
-                      </button>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="col-12 text-center">
                 <p className="text-muted">No products available</p>

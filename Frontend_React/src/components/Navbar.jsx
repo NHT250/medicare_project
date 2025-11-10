@@ -6,7 +6,7 @@ import { useCart } from "../contexts/CartContext";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, role } = useAuth();
   const { cartCount } = useCart();
   const [searchQuery, setSearchQuery] = useState("");
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -47,6 +47,8 @@ const Navbar = () => {
   const toggleUserDropdown = () => {
     setShowUserDropdown(!showUserDropdown);
   };
+
+  const userRole = (user?.role || role || "customer").toLowerCase();
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
@@ -92,6 +94,14 @@ const Navbar = () => {
         <div className="navbar-right d-flex align-items-center gap-3">
           {isAuthenticated && user ? (
             <>
+              {userRole === "admin" && (
+                <button
+                  className="btn btn-outline-primary d-none d-lg-inline"
+                  onClick={() => navigate("/admin")}
+                >
+                  <i className="fas fa-tools me-2"></i> Admin Panel
+                </button>
+              )}
               {/* Cart Icon */}
               <div
                 className="cart-icon position-relative"
@@ -119,7 +129,7 @@ const Navbar = () => {
                   </div>
                   <div className="user-info d-none d-lg-block">
                     <div className="user-name">{user.name || user.email}</div>
-                    <div className="user-role">Customer</div>
+                    <div className="user-role">{userRole === "admin" ? "Admin" : "Customer"}</div>
                   </div>
                   <i className={`fas fa-chevron-${showUserDropdown ? 'up' : 'down'} ms-2 text-muted`}></i>
                 </div>
@@ -137,6 +147,18 @@ const Navbar = () => {
                       </div>
                     </div>
                     <div className="dropdown-divider"></div>
+                    {userRole === "admin" && (
+                      <button
+                        className="dropdown-item"
+                        onClick={() => {
+                          navigate("/admin");
+                          setShowUserDropdown(false);
+                        }}
+                      >
+                        <i className="fas fa-tools me-2"></i>
+                        Admin Dashboard
+                      </button>
+                    )}
                     <button
                       className="dropdown-item"
                       onClick={() => {
