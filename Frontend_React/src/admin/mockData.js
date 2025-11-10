@@ -165,7 +165,7 @@ const mockOrders = [
       state: "District 1",
       zipCode: "700000",
       country: "VN",
-      note: "Giao giờ hành chính",
+      note: "Deliver during business hours",
     },
     items: [
       {
@@ -247,7 +247,7 @@ const mockOrders = [
         subtotal: 22.5,
       },
     ],
-    notes: "Ưu tiên đóng gói cẩn thận",
+    notes: "Please package carefully",
     activityLog: [
       {
         type: "status_change",
@@ -304,7 +304,7 @@ const mockOrders = [
         subtotal: 4.75,
       },
     ],
-    notes: "Giao buổi sáng",
+    notes: "Deliver in the morning",
     activityLog: [
       {
         type: "status_change",
@@ -375,7 +375,7 @@ const mockOrders = [
         subtotal: 7.5,
       },
     ],
-    notes: "Kiểm tra tồn kho lần nữa",
+    notes: "Verify inventory again",
     activityLog: [
       {
         type: "status_change",
@@ -432,7 +432,7 @@ const mockOrders = [
         subtotal: 45.0,
       },
     ],
-    notes: "Khách huỷ vì đổi địa chỉ",
+    notes: "Customer cancelled due to address change",
     activityLog: [
       {
         type: "status_change",
@@ -471,7 +471,7 @@ const mockOrders = [
       state: "District 1",
       zipCode: "700000",
       country: "VN",
-      note: "Giao buổi chiều",
+      note: "Deliver in the afternoon",
     },
     items: [
       {

@@ -242,10 +242,10 @@
   color: white;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* căn giữa theo chiều dọc */
-  align-items: center; /* căn giữa theo chiều ngang */
+  justify-content: center; /* center vertically */
+  align-items: center; /* center horizontally */
   text-align: center;
-  height: 100%; /* đảm bảo cột chiếm toàn bộ chiều cao */
+  height: 100%; /* ensure the column fills the full height */
 }
 
 .image-placeholder {
@@ -254,25 +254,25 @@
   border-radius: 50%;
   background: linear-gradient(135deg, #4a90e2, #5ca9f0);
 
-  /* Căn giữa */
+  /* Center content */
   display: flex;
   flex-direction: column;
-  align-items: center; /* Căn giữa ngang */
-  justify-content: center; /* Căn giữa dọc */
+  align-items: center; /* Center horizontally */
+  justify-content: center; /* Center vertically */
 
   color: #fff;
   font-weight: 600;
   text-transform: uppercase;
   text-align: center;
 
-  /* Thêm bóng nhẹ cho đẹp */
+  /* Add a subtle shadow for visual depth */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  margin: 0 auto; /* căn giữa theo chiều ngang */
-  position: relative; /* cho phép điều chỉnh bằng transform */
-  top: 60%; /* đẩy logo xuống giữa */
+  margin: 0 auto; /* center horizontally */
+  position: relative; /* allow positioning adjustments via transform */
+  top: 60%; /* shift the logo toward the middle */
   transform: translateY(
     -50%
-  ); /* căn giữa theo chiều dọc trong vùng promo-image */
+  ); /* center vertically within the promo image area */
 }
 
 .image-placeholder i {

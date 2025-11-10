@@ -43,7 +43,7 @@ const AdminUserEditor = () => {
         setStats(response.stats || { orders_count: 0, total_spent: 0 });
       } catch (err) {
         console.error("Failed to load user", err);
-        setError(err?.response?.data?.error || "Không tìm thấy người dùng");
+        setError(err?.response?.data?.error || "User not found");
       } finally {
         setLoading(false);
       }
@@ -112,7 +112,7 @@ const AdminUserEditor = () => {
       }
     } catch (err) {
       console.error("Failed to save user", err);
-      alert(err?.response?.data?.error || "Không thể lưu thông tin người dùng");
+      alert(err?.response?.data?.error || "Unable to save user information");
     } finally {
       setSaving(false);
     }
@@ -126,7 +126,7 @@ const AdminUserEditor = () => {
       setStats(refreshed.stats || stats);
     } catch (err) {
       console.error("Failed to toggle ban", err);
-      alert(err?.response?.data?.error || "Không thể cập nhật trạng thái");
+      alert(err?.response?.data?.error || "Unable to update status");
     }
   };
 
@@ -137,7 +137,7 @@ const AdminUserEditor = () => {
     if (
       user.role === "admin" &&
       role !== "admin" &&
-      !window.confirm("Bạn có chắc muốn hạ cấp tài khoản quản trị này?")
+      !window.confirm("Are you sure you want to demote this administrator account?")
     ) {
       return;
     }
@@ -148,20 +148,20 @@ const AdminUserEditor = () => {
       setStats(refreshed.stats || stats);
     } catch (err) {
       console.error("Failed to update role", err);
-      alert(err?.response?.data?.error || "Không thể cập nhật vai trò");
+      alert(err?.response?.data?.error || "Unable to update role");
     }
   };
 
   const handleResetPassword = async () => {
-    if (!window.confirm("Tạo mật khẩu tạm thời cho người dùng này?")) {
+    if (!window.confirm("Generate a temporary password for this user?")) {
       return;
     }
     try {
       const response = await adminApi.users.resetPassword(id);
-      alert(`Mật khẩu tạm thời: ${response.tempPassword}`);
+      alert(`Temporary password: ${response.tempPassword}`);
     } catch (err) {
       console.error("Failed to reset password", err);
-      alert(err?.response?.data?.error || "Không thể tạo mật khẩu tạm thời");
+      alert(err?.response?.data?.error || "Unable to create a temporary password");
     }
   };
 
@@ -181,9 +181,9 @@ const AdminUserEditor = () => {
   if (error || !user) {
     return (
       <div className="alert alert-danger m-4">
-        {error || "Không tìm thấy người dùng"}
+        {error || "User not found"}
         <button className="btn btn-link" onClick={() => navigate(-1)}>
-          Quay lại
+          Go Back
         </button>
       </div>
     );
@@ -200,7 +200,7 @@ const AdminUserEditor = () => {
                   {user.name?.[0]?.toUpperCase() || "U"}
                 </div>
                 <div className="ms-3">
-                  <h5 className="mb-1">{user.name || "(Chưa cập nhật)"}</h5>
+                  <h5 className="mb-1">{user.name || "(Not updated)"}</h5>
                   <p className="text-muted mb-0">{user.email}</p>
                   <span className={`badge ${user.role === "admin" ? "bg-danger" : "bg-primary"} mt-2`}>
                     {user.role}
@@ -209,11 +209,11 @@ const AdminUserEditor = () => {
               </div>
               <div className="d-flex justify-content-between mb-3">
                 <div>
-                  <div className="text-muted">Đơn hàng</div>
+                  <div className="text-muted">Orders</div>
                   <div className="h5 mb-0">{stats.orders_count}</div>
                 </div>
                 <div className="text-end">
-                  <div className="text-muted">Tổng chi tiêu</div>
+                  <div className="text-muted">Total Spent</div>
                   <div className="h5 mb-0">${stats.total_spent?.toFixed(2)}</div>
                 </div>
               </div>
@@ -222,7 +222,7 @@ const AdminUserEditor = () => {
                 onClick={handleToggleBan}
               >
                 <i className={`fas ${user.is_banned ? "fa-unlock" : "fa-ban"} me-2`} />
-                {user.is_banned ? "Bỏ khóa" : "Khóa tài khoản"}
+                {user.is_banned ? "Unban" : "Ban Account"}
               </button>
             </div>
           </div>
@@ -238,7 +238,7 @@ const AdminUserEditor = () => {
                     className={`nav-link ${activeTab === "personal" ? "active" : ""}`}
                     onClick={() => setActiveTab("personal")}
                   >
-                    Thông tin cá nhân
+                    Personal Information
                   </button>
                 </li>
                 <li className="nav-item">
@@ -247,7 +247,7 @@ const AdminUserEditor = () => {
                     className={`nav-link ${activeTab === "security" ? "active" : ""}`}
                     onClick={() => setActiveTab("security")}
                   >
-                    Bảo mật & quyền hạn
+                    Security & Permissions
                   </button>
                 </li>
                 <li className="nav-item">
@@ -256,7 +256,7 @@ const AdminUserEditor = () => {
                     className={`nav-link ${activeTab === "orders" ? "active" : ""}`}
                     onClick={() => setActiveTab("orders")}
                   >
-                    Đơn hàng
+                    Orders
                   </button>
                 </li>
               </ul>
@@ -265,7 +265,7 @@ const AdminUserEditor = () => {
               {activeTab === "personal" && (
                 <div className="row g-3">
                   <div className="col-md-6">
-                    <label className="form-label">Tên</label>
+                    <label className="form-label">Name</label>
                     <input
                       type="text"
                       className="form-control"
@@ -283,7 +283,7 @@ const AdminUserEditor = () => {
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Số điện thoại</label>
+                    <label className="form-label">Phone Number</label>
                     <input
                       type="text"
                       className="form-control"
@@ -292,7 +292,7 @@ const AdminUserEditor = () => {
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Đường</label>
+                    <label className="form-label">Street</label>
                     <input
                       type="text"
                       className="form-control"
@@ -301,7 +301,7 @@ const AdminUserEditor = () => {
                     />
                   </div>
                   <div className="col-md-4">
-                    <label className="form-label">Thành phố</label>
+                    <label className="form-label">City</label>
                     <input
                       type="text"
                       className="form-control"
@@ -310,7 +310,7 @@ const AdminUserEditor = () => {
                     />
                   </div>
                   <div className="col-md-4">
-                    <label className="form-label">Bang/Tỉnh</label>
+                    <label className="form-label">State/Province</label>
                     <input
                       type="text"
                       className="form-control"
@@ -319,7 +319,7 @@ const AdminUserEditor = () => {
                     />
                   </div>
                   <div className="col-md-4">
-                    <label className="form-label">Mã bưu chính</label>
+                    <label className="form-label">Postal Code</label>
                     <input
                       type="text"
                       className="form-control"
@@ -328,7 +328,7 @@ const AdminUserEditor = () => {
                     />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label">Quốc gia</label>
+                    <label className="form-label">Country</label>
                     <input
                       type="text"
                       className="form-control"
@@ -341,7 +341,7 @@ const AdminUserEditor = () => {
               {activeTab === "security" && (
                 <div className="d-flex flex-column gap-4">
                   <div>
-                    <label className="form-label">Vai trò</label>
+                    <label className="form-label">Role</label>
                     <select
                       className="form-select w-auto"
                       value={user.role}
@@ -351,14 +351,14 @@ const AdminUserEditor = () => {
                       <option value="admin">Admin</option>
                     </select>
                     <div className="form-text text-warning mt-2">
-                      Không thể hạ cấp quản trị viên cuối cùng hoặc tự hạ cấp.
+                      Cannot demote the last administrator or demote yourself.
                     </div>
                   </div>
                   <div>
-                    <label className="form-label">Đặt lại mật khẩu</label>
-                    <p className="text-muted">Tạo mật khẩu tạm thời gửi cho người dùng.</p>
+                    <label className="form-label">Reset Password</label>
+                    <p className="text-muted">Generate a temporary password to send to the user.</p>
                     <button className="btn btn-outline-primary" onClick={handleResetPassword}>
-                      <i className="fas fa-key me-2" /> Tạo mật khẩu tạm thời
+                      <i className="fas fa-key me-2" /> Generate Temporary Password
                     </button>
                   </div>
                 </div>
@@ -366,26 +366,26 @@ const AdminUserEditor = () => {
               {activeTab === "orders" && (
                 <div>
                   <div className="d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="mb-0">Lịch sử đơn hàng</h5>
+                    <h5 className="mb-0">Order History</h5>
                     <span className="badge bg-primary">
-                      Tổng chi tiêu: ${orderTotal.toFixed(2)}
+                      Total spent: ${orderTotal.toFixed(2)}
                     </span>
                   </div>
                   <div className="table-responsive">
                     <table className="table table-striped">
                       <thead>
                         <tr>
-                          <th>Mã đơn</th>
-                          <th>Ngày tạo</th>
-                          <th>Trạng thái</th>
-                          <th className="text-end">Tổng tiền</th>
+                          <th>Order ID</th>
+                          <th>Created At</th>
+                          <th>Status</th>
+                          <th className="text-end">Total Amount</th>
                         </tr>
                       </thead>
                       <tbody>
                         {orders.length === 0 ? (
                           <tr>
-                            <td colSpan="4" className="text-center text-muted py-4">
-                              Chưa có đơn hàng nào.
+                              <td colSpan="4" className="text-center text-muted py-4">
+                                No orders yet.
                             </td>
                           </tr>
                         ) : (
@@ -413,14 +413,14 @@ const AdminUserEditor = () => {
           <div className="card shadow-sm border-0 mt-4 sticky-bottom" style={{ zIndex: 9 }}>
             <div className="card-body d-flex justify-content-between align-items-center">
               <div className="text-muted">
-                {isDirty ? "Có thay đổi chưa lưu" : "Tất cả thay đổi đã được lưu"}
+                {isDirty ? "Unsaved changes" : "All changes saved"}
               </div>
               <div className="btn-group">
                 <button className="btn btn-outline-secondary" onClick={() => handleSave({ closeAfter: false })} disabled={saving}>
-                  <i className="fas fa-save me-1" /> Lưu
+                  <i className="fas fa-save me-1" /> Save
                 </button>
                 <button className="btn btn-primary" onClick={() => handleSave({ closeAfter: true })} disabled={saving}>
-                  <i className="fas fa-check me-1" /> Lưu & Đóng
+                  <i className="fas fa-check me-1" /> Save & Close
                 </button>
               </div>
             </div>

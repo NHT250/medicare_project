@@ -60,7 +60,7 @@ const AdminLayout = () => {
         <header className="bg-white shadow-sm p-4 d-flex justify-content-between align-items-center">
           <div>
             <h1 className="h4 mb-0">Admin Panel</h1>
-            <p className="text-muted mb-0">Quản trị sản phẩm và người dùng</p>
+            <p className="text-muted mb-0">Manage products and users</p>
           </div>
           <div className="d-flex align-items-center gap-2">
             <button className="btn btn-outline-secondary" onClick={() => navigate("/")}>
@@ -76,8 +76,8 @@ const AdminLayout = () => {
             <div className="alert alert-warning d-flex align-items-center gap-2" role="alert">
               <i className="fas fa-exclamation-triangle" aria-hidden="true" />
               <span>
-                You are viewing demo data. Kết nối backend thực tế hoặc tắt
-                <code className="ms-1">VITE_USE_ADMIN_MOCKS</code> để sử dụng API thật.
+                You are viewing demo data. Connect the production backend or disable
+                <code className="ms-1">VITE_USE_ADMIN_MOCKS</code> to use the live API.
               </span>
             </div>
           )}

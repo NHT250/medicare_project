@@ -56,7 +56,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
         });
       } catch (err) {
         console.error("Failed to load product", err);
-        setError(err?.response?.data?.error || "Không tìm thấy sản phẩm");
+        setError(err?.response?.data?.error || "Product not found");
       } finally {
         setLoading(false);
       }
@@ -96,23 +96,23 @@ const AdminProductEditor = ({ mode = "create" }) => {
 
   const validateProduct = () => {
     if (!product.name.trim()) {
-      alert("Tên sản phẩm là bắt buộc");
+      alert("Product name is required");
       return false;
     }
     if (!product.category.trim()) {
-      alert("Danh mục là bắt buộc");
+      alert("Category is required");
       return false;
     }
     if (Number(product.price) < 0) {
-      alert("Giá không hợp lệ");
+      alert("Invalid price");
       return false;
     }
     if (Number(product.stock) < 0) {
-      alert("Tồn kho không hợp lệ");
+      alert("Invalid stock quantity");
       return false;
     }
     if (product.images.length === 0) {
-      alert("Vui lòng thêm ít nhất một hình ảnh");
+      alert("Please add at least one image");
       return false;
     }
     return true;
@@ -155,7 +155,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
       }
     } catch (err) {
       console.error("Save failed", err);
-      alert(err?.response?.data?.errors?.join("\n") || err?.response?.data?.error || "Không thể lưu sản phẩm");
+      alert(err?.response?.data?.errors?.join("\n") || err?.response?.data?.error || "Unable to save product");
     } finally {
       setSaving(false);
     }
@@ -165,7 +165,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
     if (!isEditMode) {
       return;
     }
-    if (!window.confirm("Bạn có chắc muốn xóa sản phẩm này?")) {
+    if (!window.confirm("Are you sure you want to delete this product?")) {
       return;
     }
     try {
@@ -173,7 +173,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
       navigate("/admin/products");
     } catch (err) {
       console.error("Delete failed", err);
-      alert(err?.response?.data?.error || "Không thể xóa sản phẩm");
+      alert(err?.response?.data?.error || "Unable to delete product");
     }
   };
 
@@ -190,7 +190,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
       <div className="alert alert-danger my-4 mx-4">
         {error}
         <button className="btn btn-link" onClick={() => navigate(-1)}>
-          Quay lại
+          Go Back
         </button>
       </div>
     );
@@ -201,14 +201,14 @@ const AdminProductEditor = ({ mode = "create" }) => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="h4 mb-1">
-            {isEditMode ? "Chỉnh sửa sản phẩm" : "Tạo sản phẩm mới"}
+            {isEditMode ? "Edit Product" : "Create Product"}
           </h2>
           <p className="text-muted mb-0">
-            Giao diện chỉnh sửa giống trang chi tiết sản phẩm giúp thao tác quen thuộc.
+            The editor mirrors the product detail page for a familiar workflow.
           </p>
         </div>
-        <button className="btn btn-outline-secondary" onClick={() => navigate("/admin/products")}>
-          <i className="fas fa-arrow-left me-2" /> Trở lại danh sách
+        <button className="btn btn-outline-secondary" onClick={() => navigate("/admin/products")}> 
+          <i className="fas fa-arrow-left me-2" /> Back to list
         </button>
       </div>
 
@@ -216,7 +216,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
         <div className="col-lg-5">
           <div className="card shadow-sm border-0 h-100">
             <div className="card-header bg-white">
-              <h5 className="card-title mb-0">Hình ảnh</h5>
+              <h5 className="card-title mb-0">Images</h5>
             </div>
             <div className="card-body">
               <ImagePicker images={product.images} setImages={handleImagesChange} />
@@ -229,7 +229,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
             <div className="card-body">
               <div className="row g-3">
                 <div className="col-md-6">
-                  <label className="form-label">Tên sản phẩm</label>
+                  <label className="form-label">Product Name</label>
                   <input
                     type="text"
                     className="form-control"
@@ -258,7 +258,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                   />
                 </div>
                 <div className="col-md-6">
-                  <label className="form-label">Danh mục</label>
+                  <label className="form-label">Category</label>
                   <input
                     type="text"
                     className="form-control"
@@ -267,7 +267,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                   />
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label">Giá</label>
+                  <label className="form-label">Price</label>
                   <input
                     type="number"
                     min="0"
@@ -277,7 +277,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                   />
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label">Giảm giá (%)</label>
+                  <label className="form-label">Discount (%)</label>
                   <input
                     type="number"
                     min="0"
@@ -288,7 +288,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                   />
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label">Tồn kho</label>
+                  <label className="form-label">Stock</label>
                   <input
                     type="number"
                     min="0"
@@ -298,7 +298,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                   />
                 </div>
                 <div className="col-md-3">
-                  <label className="form-label d-block">Trạng thái</label>
+                  <label className="form-label d-block">Status</label>
                   <div className="form-check form-switch">
                     <input
                       className="form-check-input"
@@ -307,7 +307,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                       onChange={(e) => handleFieldChange("is_active", e.target.checked)}
                     />
                     <label className="form-check-label">
-                      {product.is_active ? "Đang bán" : "Tạm ẩn"}
+                      {product.is_active ? "Active" : "Hidden"}
                     </label>
                   </div>
                 </div>
@@ -316,7 +316,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
               <div className="bg-light rounded border p-3 mt-4">
                 <div className="d-flex align-items-center justify-content-between">
                   <div>
-                    <span className="text-muted">Giá sau giảm</span>
+                    <span className="text-muted">Price after discount</span>
                     <div className="fs-4 text-success fw-semibold">${finalPrice.toFixed(2)}</div>
                   </div>
                   <span className={`badge ${product.stock > 0 ? "bg-success" : "bg-danger"}`}>
@@ -336,7 +336,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                     onClick={() => setActiveTab("description")}
                     type="button"
                   >
-                    Mô tả
+                    Description
                   </button>
                 </li>
                 <li className="nav-item">
@@ -345,7 +345,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                     onClick={() => setActiveTab("specifications")}
                     type="button"
                   >
-                    Thông số kỹ thuật
+                    Specifications
                   </button>
                 </li>
                 <li className="nav-item">
@@ -354,7 +354,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                     onClick={() => setActiveTab("reviews")}
                     type="button"
                   >
-                    Đánh giá
+                    Reviews
                   </button>
                 </li>
               </ul>
@@ -362,7 +362,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
             <div className="card-body">
               {activeTab === "description" && (
                 <div>
-                  <label className="form-label">Mô tả chi tiết</label>
+                  <label className="form-label">Detailed Description</label>
                   <textarea
                     className="form-control"
                     rows="6"
@@ -379,7 +379,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Thuộc tính"
+                          placeholder="Attribute"
                           value={item.key}
                           onChange={(e) => handleSpecificationChange(index, "key", e.target.value)}
                         />
@@ -388,7 +388,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
                         <input
                           type="text"
                           className="form-control"
-                          placeholder="Giá trị"
+                          placeholder="Value"
                           value={item.value}
                           onChange={(e) => handleSpecificationChange(index, "value", e.target.value)}
                         />
@@ -406,13 +406,13 @@ const AdminProductEditor = ({ mode = "create" }) => {
                     </div>
                   ))}
                   <button type="button" className="btn btn-outline-primary" onClick={addSpecification}>
-                    <i className="fas fa-plus me-1" /> Thêm dòng
+                    <i className="fas fa-plus me-1" /> Add row
                   </button>
                 </div>
               )}
               {activeTab === "reviews" && (
                 <div className="text-muted">
-                  Chế độ mock đang hiển thị {product.reviewsCount || 0} lượt đánh giá. Quản trị viên không chỉnh sửa tại đây.
+                  Mock mode is showing {product.reviewsCount || 0} reviews. Administrators cannot edit them here.
                 </div>
               )}
             </div>
@@ -423,12 +423,12 @@ const AdminProductEditor = ({ mode = "create" }) => {
       <div className="card shadow-sm border-0 mt-4 sticky-bottom" style={{ zIndex: 10 }}>
         <div className="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
           <div className="text-muted">
-            {saving ? "Đang lưu..." : lastSaved ? `Lần lưu gần nhất ${lastSaved.toLocaleTimeString()}` : "Chưa lưu"}
+            {saving ? "Saving..." : lastSaved ? `Last saved at ${lastSaved.toLocaleTimeString()}` : "Not saved yet"}
           </div>
           <div className="btn-group">
             {isEditMode && (
               <button type="button" className="btn btn-outline-danger" onClick={handleDelete} disabled={saving}>
-                <i className="fas fa-trash me-1" /> Xóa
+                <i className="fas fa-trash me-1" /> Delete
               </button>
             )}
             <button
@@ -437,7 +437,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
               onClick={() => saveProduct({ closeAfterSave: false })}
               disabled={saving}
             >
-              <i className="fas fa-save me-1" /> Lưu
+              <i className="fas fa-save me-1" /> Save
             </button>
             <button
               type="button"
@@ -445,7 +445,7 @@ const AdminProductEditor = ({ mode = "create" }) => {
               onClick={() => saveProduct({ closeAfterSave: true })}
               disabled={saving}
             >
-              <i className="fas fa-check me-1" /> Lưu & Đóng
+              <i className="fas fa-check me-1" /> Save & Close
             </button>
           </div>
         </div>

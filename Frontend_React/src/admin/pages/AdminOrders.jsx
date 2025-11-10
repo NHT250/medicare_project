@@ -101,7 +101,7 @@ const AdminOrders = () => {
         console.error("Failed to load orders", err);
         setError(
           err?.response?.data?.error ||
-            "Không thể tải danh sách đơn hàng. Vui lòng thử lại."
+            "Unable to load orders. Please try again."
         );
       } finally {
         setLoading(false);
@@ -185,7 +185,7 @@ const AdminOrders = () => {
         <div>
           <h2 className="h4 mb-1">Orders</h2>
           <p className="text-muted mb-0">
-            Quản lý đơn hàng, cập nhật trạng thái và ghi chú nội bộ.
+            Manage orders, update statuses, and track internal notes.
           </p>
         </div>
         <div className="d-flex gap-2">
@@ -269,7 +269,7 @@ const AdminOrders = () => {
           ) : orders.length === 0 ? (
             <div className="py-5 text-center text-muted">
               <i className="fas fa-box-open fa-2x mb-3" />
-              <p className="mb-0">Không có đơn hàng nào phù hợp.</p>
+              <p className="mb-0">No matching orders.</p>
             </div>
           ) : (
             <div className="table-responsive">
