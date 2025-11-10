@@ -17,6 +17,9 @@ db.users.delete_many({})
 db.products.delete_many({})
 db.categories.delete_many({})
 
+# Ensure email uniqueness index exists before inserting documents
+db.users.create_index('email', unique=True)
+
 print('🗑️  Cleared existing data...')
 
 # Sample Users

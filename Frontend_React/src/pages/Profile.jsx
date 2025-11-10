@@ -15,6 +15,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState("info");
+  const [formError, setFormError] = useState("");
 
   // Form state for editing
   const [formData, setFormData] = useState({
@@ -72,6 +73,9 @@ const Profile = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === "email") {
+      setFormError("");
+    }
     if (name.includes(".")) {
       const [parent, child] = name.split(".");
       setFormData({
@@ -100,12 +104,19 @@ const Profile = () => {
         updateUser(response.user);
         alert("Profile updated successfully!");
         setIsEditing(false);
+        setFormError("");
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert(error.response?.data?.error || "Failed to update profile");
+      const apiMessage =
+        error.response?.data?.message || error.response?.data?.error;
+      if (apiMessage === "Email already exists") {
+        setFormError(apiMessage);
+      } else {
+        alert(apiMessage || "Failed to update profile");
+      }
     } finally {
       setLoading(false);
     }
@@ -114,6 +125,7 @@ const Profile = () => {
   const handleCancel = () => {
     loadUserData();
     setIsEditing(false);
+    setFormError("");
   };
 
   const getInitials = (name) => {
@@ -322,6 +334,9 @@ const Profile = () => {
                           onChange={handleInputChange}
                           disabled={!isEditing}
                         />
+                        {formError && (
+                          <div className="text-danger small mt-1">{formError}</div>
+                        )}
                       </div>
 
                       {/* Phone */}

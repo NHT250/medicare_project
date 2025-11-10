@@ -7,6 +7,47 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import '../styles/Orders.css';
 
+const STATUS_MAP = {
+  Pending: 'pending',
+  Confirmed: 'processing',
+  Delivered: 'delivered',
+  Cancelled: 'cancelled'
+};
+
+const STATUS_LABELS = {
+  pending: 'Pending',
+  processing: 'Processing',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled'
+};
+
+const TIMELINE_COMPLETION = {
+  pending: ['pending'],
+  processing: ['pending', 'processing'],
+  shipped: ['pending', 'processing', 'shipped'],
+  delivered: ['pending', 'processing', 'shipped', 'delivered'],
+  cancelled: ['pending']
+};
+
+const normaliseStatusKey = (status) => {
+  if (!status) {
+    return 'pending';
+  }
+  const raw = status.toString().trim();
+  if (!raw) {
+    return 'pending';
+  }
+  if (STATUS_MAP[raw]) {
+    return STATUS_MAP[raw];
+  }
+  const canonical = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+  if (STATUS_MAP[canonical]) {
+    return STATUS_MAP[canonical];
+  }
+  return raw.toLowerCase();
+};
+
 const Orders = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -46,6 +87,7 @@ const Orders = () => {
   };
 
   const getStatusBadge = (status) => {
+    const statusKey = normaliseStatusKey(status);
     const statusClasses = {
       pending: 'bg-warning',
       processing: 'bg-info',
@@ -55,8 +97,8 @@ const Orders = () => {
     };
 
     return (
-      <span className={`badge ${statusClasses[status] || 'bg-secondary'}`}>
-        {status.toUpperCase()}
+      <span className={`badge ${statusClasses[statusKey] || 'bg-secondary'}`}>
+        {(STATUS_LABELS[statusKey] || status || 'Pending').toUpperCase()}
       </span>
     );
   };
@@ -111,8 +153,21 @@ const Orders = () => {
           </div>
         ) : (
           <div className="orders-list">
-            {orders.map((order) => (
-              <div key={order._id} className="order-card card mb-3">
+            {orders.map((order) => {
+              const statusKey = normaliseStatusKey(order.status);
+              const completedSteps = new Set(
+                TIMELINE_COMPLETION[statusKey] || TIMELINE_COMPLETION.pending
+              );
+              const subtotal = Number(order.subtotal ?? 0);
+              const shippingFee = Number(order.shippingFee ?? order.shipping_fee ?? 0);
+              const tax = Number(order.tax ?? 0);
+              const total = Number(order.total ?? subtotal + shippingFee + tax);
+              const shippingInfo = order.shipping || {};
+              const paymentInfo = order.payment || {};
+              const items = Array.isArray(order.items) ? order.items : [];
+
+              return (
+                <div key={order._id} className="order-card card mb-3">
                 {/* Order Header */}
                 <div className="card-header">
                   <div className="row align-items-center">
@@ -137,7 +192,7 @@ const Orders = () => {
                     <div className="col-md-2">
                       <div className="order-info">
                         <small className="text-muted d-block">Total</small>
-                        <strong className="text-success">${order.total.toFixed(2)}</strong>
+                        <strong className="text-success">${total.toFixed(2)}</strong>
                       </div>
                     </div>
                     <div className="col-md-2 text-end">
@@ -175,12 +230,12 @@ const Orders = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {order.items.map((item, index) => (
+                          {items.map((item, index) => (
                             <tr key={index}>
                               <td>{item.name}</td>
-                              <td>${item.price.toFixed(2)}</td>
+                              <td>${Number(item.price ?? 0).toFixed(2)}</td>
                               <td>{item.quantity}</td>
-                              <td>${item.subtotal.toFixed(2)}</td>
+                              <td>${Number(item.subtotal ?? 0).toFixed(2)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -195,12 +250,15 @@ const Orders = () => {
                           Shipping Information
                         </h6>
                         <div className="shipping-info">
-                          <p className="mb-1"><strong>{order.shipping.fullName}</strong></p>
-                          <p className="mb-1">{order.shipping.email}</p>
-                          <p className="mb-1">{order.shipping.phone}</p>
-                          <p className="mb-1">{order.shipping.address}</p>
+                          <p className="mb-1">
+                            <strong>{shippingInfo.fullName || shippingInfo.full_name || '—'}</strong>
+                          </p>
+                          <p className="mb-1">{shippingInfo.email || '—'}</p>
+                          <p className="mb-1">{shippingInfo.phone || '—'}</p>
+                          <p className="mb-1">{shippingInfo.address || '—'}</p>
                           <p className="mb-0">
-                            {order.shipping.city}, {order.shipping.state} {order.shipping.zipCode}
+                            {[shippingInfo.city, shippingInfo.state].filter(Boolean).join(', ') || '—'}{' '}
+                            {shippingInfo.zipCode || shippingInfo.zip || ''}
                           </p>
                         </div>
                       </div>
@@ -214,20 +272,20 @@ const Orders = () => {
                         <div className="order-summary">
                           <div className="d-flex justify-content-between mb-2">
                             <span>Subtotal:</span>
-                            <span>${order.subtotal.toFixed(2)}</span>
+                            <span>${subtotal.toFixed(2)}</span>
                           </div>
                           <div className="d-flex justify-content-between mb-2">
                             <span>Shipping:</span>
-                            <span>${order.shippingFee.toFixed(2)}</span>
+                            <span>${shippingFee.toFixed(2)}</span>
                           </div>
                           <div className="d-flex justify-content-between mb-2">
                             <span>Tax:</span>
-                            <span>${order.tax.toFixed(2)}</span>
+                            <span>${tax.toFixed(2)}</span>
                           </div>
                           <hr />
                           <div className="d-flex justify-content-between">
                             <strong>Total:</strong>
-                            <strong className="text-success">${order.total.toFixed(2)}</strong>
+                            <strong className="text-success">${total.toFixed(2)}</strong>
                           </div>
                         </div>
 
@@ -235,7 +293,10 @@ const Orders = () => {
                         <div className="payment-info mt-3">
                           <small className="text-muted">
                             <i className="fas fa-credit-card me-1"></i>
-                            Payment Method: {order.payment.method === 'card' ? 'Credit/Debit Card' : 'Cash on Delivery'}
+                            Payment Method:{' '}
+                            {paymentInfo.method === 'card'
+                              ? 'Credit/Debit Card'
+                              : paymentInfo.method || 'Cash on Delivery'}
                           </small>
                         </div>
                       </div>
@@ -248,25 +309,25 @@ const Orders = () => {
                         Order Tracking
                       </h6>
                       <div className="tracking-timeline">
-                        <div className={`tracking-step ${['pending', 'processing', 'shipped', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                        <div className={`tracking-step ${completedSteps.has('pending') ? 'completed' : ''}`}>
                           <div className="tracking-icon">
                             <i className="fas fa-check"></i>
                           </div>
                           <div className="tracking-label">Order Placed</div>
                         </div>
-                        <div className={`tracking-step ${['processing', 'shipped', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                        <div className={`tracking-step ${completedSteps.has('processing') ? 'completed' : ''}`}>
                           <div className="tracking-icon">
                             <i className="fas fa-cog"></i>
                           </div>
                           <div className="tracking-label">Processing</div>
                         </div>
-                        <div className={`tracking-step ${['shipped', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                        <div className={`tracking-step ${completedSteps.has('shipped') ? 'completed' : ''}`}>
                           <div className="tracking-icon">
                             <i className="fas fa-truck"></i>
                           </div>
                           <div className="tracking-label">Shipped</div>
                         </div>
-                        <div className={`tracking-step ${order.status === 'delivered' ? 'completed' : ''}`}>
+                        <div className={`tracking-step ${completedSteps.has('delivered') ? 'completed' : ''}`}>
                           <div className="tracking-icon">
                             <i className="fas fa-home"></i>
                           </div>
@@ -289,7 +350,8 @@ const Orders = () => {
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

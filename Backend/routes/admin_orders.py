@@ -308,6 +308,17 @@ def list_orders(current_user):  # pylint: disable=unused-argument
 
     query: dict[str, Any] = {}
 
+    user_filter = (request.args.get("user_id") or "").strip()
+    if user_filter:
+        if user_filter.isdigit():
+            query["userId"] = user_filter
+        else:
+            object_id = _parse_object_id(user_filter)
+            if object_id:
+                query["userId"] = str(object_id)
+            else:
+                query["userId"] = user_filter
+
     if status_param:
         canonical_status = _canonical_status(status_param)
         if canonical_status not in VALID_STATUSES:
