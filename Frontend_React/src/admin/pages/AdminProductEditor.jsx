@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import adminApi from "../api";
+import ImagePicker from "../components/ImagePicker";
 
 const emptyProduct = {
   name: "",
@@ -67,47 +68,8 @@ const AdminProductEditor = ({ mode = "create" }) => {
     setProduct((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAddImageByUrl = () => {
-    const url = window.prompt("Nhập URL hình ảnh");
-    if (url) {
-      setProduct((prev) => ({ ...prev, images: [...(prev.images || []), url] }));
-    }
-  };
-
-  const handleImageUpload = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result;
-      setProduct((prev) => ({ ...prev, images: [...prev.images, url] }));
-    };
-    reader.onerror = () => {
-      alert("Không thể đọc file. Vui lòng thử lại.");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const moveImage = (index, direction) => {
-    setProduct((prev) => {
-      const images = [...prev.images];
-      const newIndex = index + direction;
-      if (newIndex < 0 || newIndex >= images.length) {
-        return prev;
-      }
-      const [removed] = images.splice(index, 1);
-      images.splice(newIndex, 0, removed);
-      return { ...prev, images };
-    });
-  };
-
-  const removeImage = (index) => {
-    setProduct((prev) => {
-      const images = prev.images.filter((_, idx) => idx !== index);
-      return { ...prev, images };
-    });
+  const handleImagesChange = (images) => {
+    setProduct((prev) => ({ ...prev, images }));
   };
 
   const handleSpecificationChange = (index, field, value) => {
@@ -253,84 +215,11 @@ const AdminProductEditor = ({ mode = "create" }) => {
       <div className="row g-4">
         <div className="col-lg-5">
           <div className="card shadow-sm border-0 h-100">
-            <div className="card-header bg-white d-flex justify-content-between align-items-center">
+            <div className="card-header bg-white">
               <h5 className="card-title mb-0">Hình ảnh</h5>
-              <div>
-                <label className="btn btn-outline-primary btn-sm me-2 mb-0">
-                  <i className="fas fa-upload me-1" /> Upload
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="d-none"
-                    onChange={handleImageUpload}
-                  />
-                </label>
-                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleAddImageByUrl}>
-                  <i className="fas fa-link me-1" /> Thêm URL
-                </button>
-              </div>
             </div>
             <div className="card-body">
-              <div className="mb-3">
-                <div className="ratio ratio-4x3 bg-light rounded border d-flex align-items-center justify-content-center">
-                  {product.images?.length ? (
-                    <img
-                      src={product.images[0]}
-                      alt="preview"
-                      className="img-fluid rounded"
-                      style={{ maxHeight: 260, objectFit: "contain" }}
-                    />
-                  ) : (
-                    <span className="text-muted">Chưa có hình ảnh</span>
-                  )}
-                </div>
-              </div>
-              <div className="d-flex flex-wrap gap-2">
-                {product.images?.map((img, index) => (
-                  <div key={img} className="position-relative">
-                    <img
-                      src={img}
-                      alt={`thumbnail-${index}`}
-                      className={`rounded ${index === 0 ? "border border-primary" : "border"}`}
-                      style={{ width: 80, height: 80, objectFit: "cover", cursor: "pointer" }}
-                      onClick={() => {
-                        setProduct((prev) => {
-                          if (index === 0) {
-                            return prev;
-                          }
-                          const images = [...prev.images];
-                          const [selected] = images.splice(index, 1);
-                          images.unshift(selected);
-                          return { ...prev, images };
-                        });
-                      }}
-                    />
-                    <div className="btn-group position-absolute top-0 end-0">
-                      <button
-                        type="button"
-                        className="btn btn-light btn-sm"
-                        onClick={() => moveImage(index, -1)}
-                      >
-                        <i className="fas fa-chevron-up" />
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-light btn-sm"
-                        onClick={() => moveImage(index, 1)}
-                      >
-                        <i className="fas fa-chevron-down" />
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm"
-                        onClick={() => removeImage(index)}
-                      >
-                        <i className="fas fa-times" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <ImagePicker images={product.images} setImages={handleImagesChange} />
             </div>
           </div>
         </div>

@@ -14,6 +14,7 @@ import requests
 from routes.admin import admin_bp
 from routes.admin_dashboard import dashboard_bp as admin_dashboard_bp
 from routes.admin_orders import admin_orders_bp
+from routes.admin_uploads import admin_uploads_bp
 from utils.auth import token_required
 from utils.helpers import serialize_doc
 
@@ -135,6 +136,7 @@ app.mongo_db = db
 app.register_blueprint(admin_bp)
 app.register_blueprint(admin_dashboard_bp)
 app.register_blueprint(admin_orders_bp)
+app.register_blueprint(admin_uploads_bp)
 
 # Helper function to verify reCAPTCHA
 def verify_recaptcha(recaptcha_token):
