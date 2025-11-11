@@ -149,7 +149,16 @@ app.register_blueprint(admin_orders_bp)
 app.register_blueprint(admin_uploads_bp)
 
 # Helper function to verify reCAPTCHA
-def verify_recaptcha(recaptcha_token):
+def verify_recaptcha(recaptcha_token: str | None) -> bool:
+    """Validate the reCAPTCHA token when the feature is enabled."""
+
+    if not Config.ENABLE_RECAPTCHA:
+        # Allow seamless operation when reCAPTCHA is disabled via configuration.
+        return True
+
+    if not recaptcha_token:
+        return False
+
     try:
         response = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
@@ -187,10 +196,9 @@ def index():
 def register():
     try:
         data = request.json
-        
-        # Verify reCAPTCHA
-        recaptcha_token = data.get('recaptcha_token')
-        if not recaptcha_token or not verify_recaptcha(recaptcha_token):
+
+        # Verify reCAPTCHA when enabled
+        if Config.ENABLE_RECAPTCHA and not verify_recaptcha(data.get('recaptcha_token')):
             return jsonify({'error': 'reCAPTCHA verification failed'}), 400
         
         # Check if user exists
@@ -226,10 +234,9 @@ def register():
 def login():
     try:
         data = request.json
-        
-        # Verify reCAPTCHA
-        recaptcha_token = data.get('recaptcha_token')
-        if not recaptcha_token or not verify_recaptcha(recaptcha_token):
+
+        # Verify reCAPTCHA when enabled
+        if Config.ENABLE_RECAPTCHA and not verify_recaptcha(data.get('recaptcha_token')):
             return jsonify({'error': 'reCAPTCHA verification failed'}), 400
         
         # Find user
