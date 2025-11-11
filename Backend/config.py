@@ -18,10 +18,19 @@ class Config:
     JWT_EXPIRATION_DELTA = 86400  # 24 hours
 
     # reCAPTCHA Configuration
-    RECAPTCHA_SECRET_KEY = os.getenv('RECAPTCHA_SECRET_KEY')
+    ENABLE_RECAPTCHA = os.getenv('ENABLE_RECAPTCHA', 'True').lower() in {
+        'true',
+        '1',
+        'yes',
+    }
+    RECAPTCHA_SECRET_KEY = os.getenv(
+        'RECAPTCHA_SECRET_KEY', '6LfGbvwrAAAAADdlE7GTi5LekEyGKzde4J6_L2-z'
+    )
 
-    if not JWT_SECRET_KEY or not RECAPTCHA_SECRET_KEY:
-        raise RuntimeError('Missing secrets in environment variables')
+    if not JWT_SECRET_KEY:
+        raise RuntimeError('Missing JWT secret in environment variables')
+    if ENABLE_RECAPTCHA and not RECAPTCHA_SECRET_KEY:
+        raise RuntimeError('Missing reCAPTCHA secret key while reCAPTCHA is enabled')
     
     # Flask Configuration
     DEBUG = os.getenv('FLASK_DEBUG', 'True') == 'True'

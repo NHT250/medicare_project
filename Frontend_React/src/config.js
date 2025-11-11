@@ -7,7 +7,7 @@ const config = {
   // reCAPTCHA Configuration
   RECAPTCHA_SITE_KEY:
     import.meta.env.VITE_RECAPTCHA_SITE_KEY ||
-    "6LdpBAEsAAAAADDIHne2Ue-2ZKSTvABzhScPszcY",
+    "6LfGbvwrAAAAAOCXGdw0YWlf4VQ6pk6FI5nN8Bke",
 
   // App Configuration
   APP_NAME: "Medicare",
