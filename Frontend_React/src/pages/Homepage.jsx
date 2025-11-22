@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import TopBanner from "../components/TopBanner";
 import Navbar from "../components/Navbar";
-import HeroCarousel from "../components/HeroCarousel";
+import HeroBannerSlider from "../components/HeroBannerSlider";
 import Footer from "../components/Footer";
 import "./Homepage.css";
 
@@ -59,7 +59,7 @@ const Homepage = () => {
     <div className="homepage">
       <TopBanner />
       <Navbar />
-      <HeroCarousel />
+      <HeroBannerSlider />
 
       {/* Categories Section */}
       <section className="categories-section py-5">
