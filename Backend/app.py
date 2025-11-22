@@ -11,7 +11,9 @@ from bson import ObjectId
 from bson.errors import InvalidId
 import json
 import requests
+import random
 import secrets
+import string
 import smtplib
 import ssl
 from email.mime.text import MIMEText
@@ -185,11 +187,11 @@ def verify_recaptcha(recaptcha_token: str | None) -> bool:
         return False
 
 
-def generate_otp(length: int = 6) -> str:
-    """Generate a zero-padded numeric OTP of the specified length."""
+def generate_otp(length: int = 8) -> str:
+    """Generate a random alphanumeric OTP of the specified length."""
 
-    max_value = 10**length
-    return f"{secrets.randbelow(max_value):0{length}d}"
+    characters = string.ascii_uppercase + string.digits
+    return ''.join(random.choices(characters, k=length))
 
 
 def send_otp_email(recipient_email: str, otp: str) -> None:
