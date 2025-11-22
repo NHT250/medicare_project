@@ -68,15 +68,39 @@ export const authAPI = {
       const response = await api.post('/api/auth/register', userData);
       return response.data;
     } catch (error) {
-      console.warn('Auth API unavailable, returning mock registration response.');
+      console.warn('Auth API unavailable, returning mock OTP response.');
       return {
+        message: 'OTP sent (mock)',
+        email: userData?.email
+      };
+    }
+  },
+
+  verifyOtp: async (payload) => {
+    try {
+      const response = await api.post('/api/auth/verify-otp', payload);
+      return response.data;
+    } catch (error) {
+      console.warn('Verify OTP API unavailable, returning mock verification.');
+      return {
+        message: 'verified',
         user: {
           _id: 'mock-user-id',
-          name: userData?.name || 'New User',
-          email: userData?.email || 'guest@medicare.com',
+          email: payload?.email,
+          name: payload?.email?.split('@')[0] || 'User',
           role: 'customer'
         }
       };
+    }
+  },
+
+  resendOtp: async (payload) => {
+    try {
+      const response = await api.post('/api/auth/resend-otp', payload);
+      return response.data;
+    } catch (error) {
+      console.warn('Resend OTP API unavailable, returning mock response.');
+      return { message: 'OTP resent (mock)' };
     }
   },
 

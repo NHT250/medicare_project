@@ -85,11 +85,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await authAPI.register(userData);
 
-      if (data.user) {
+      if (data.message) {
         return { success: true, data };
-      } else {
-        throw new Error("Invalid response from server");
       }
+
+      throw new Error("Invalid response from server");
     } catch (error) {
       console.error("Register error:", error);
       return {

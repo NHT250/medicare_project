@@ -46,3 +46,13 @@ class Config:
         'http://127.0.0.1:5173'       # Vite (React)
     ]
 
+    # Email (SMTP - Gmail) configuration
+    SMTP_HOST = os.getenv('SMTP_HOST', 'smtp.gmail.com')
+    SMTP_PORT = int(os.getenv('SMTP_PORT', 587))
+    SMTP_USERNAME = os.getenv('SMTP_USERNAME')
+    SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
+    SMTP_FROM_EMAIL = os.getenv('SMTP_FROM_EMAIL', SMTP_USERNAME)
+
+    if not SMTP_USERNAME or not SMTP_PASSWORD:
+        raise RuntimeError('Missing SMTP credentials in environment variables')
+

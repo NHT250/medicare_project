@@ -370,6 +370,22 @@
   color: #991b1b;
 }
 
+.link-button {
+  background: none;
+  border: none;
+  color: #1d4ed8;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.link-button:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .auth-container {
