@@ -460,6 +460,26 @@ const Checkout = () => {
                     <strong className="text-success fs-4">${total.toFixed(2)}</strong>
                   </div>
                 </div>
+
+                {/* VNPAY QR Payment */}
+                <form
+                  action="http://localhost:3000/create-order"
+                  method="POST"
+                  className="mt-3"
+                >
+                  <input
+                    type="hidden"
+                    name="amount"
+                    value={Number(total.toFixed(2))}
+                  />
+                  <button type="submit" className="btn btn-primary w-100">
+                    <i className="fas fa-qrcode me-2"></i>
+                    Thanh toán bằng VNPAY QR
+                  </button>
+                  <small className="text-muted d-block mt-2">
+                    Bấm để được chuyển sang trang thanh toán VNPAY QR demo.
+                  </small>
+                </form>
               </div>
             </div>
           </div>
