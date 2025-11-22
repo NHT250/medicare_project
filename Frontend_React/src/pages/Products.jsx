@@ -1,11 +1,12 @@
 // Products Page Component
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { productsAPI, categoriesAPI } from '../services/api';
+import { productsAPI } from '../services/api';
 import { useCart } from '../contexts/CartContext';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import '../styles/Products.css';
+import { FIXED_CATEGORIES } from '../constants/categories';
 
 const Products = () => {
   const navigate = useNavigate();
@@ -13,7 +14,6 @@ const Products = () => {
   const { addToCart } = useCart();
   
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -25,17 +25,6 @@ const Products = () => {
     search: searchParams.get('search') || '',
     sortBy: 'popularity'
   });
-
-  const loadCategories = useCallback(async () => {
-    try {
-      const data = await categoriesAPI.getAll();
-      if (data.categories) {
-        setCategories(data.categories);
-      }
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    }
-  }, []);
 
   const loadProducts = useCallback(async () => {
     try {
@@ -59,14 +48,17 @@ const Products = () => {
 
       const data = await productsAPI.getAll(params);
       if (data.products) {
-        setProducts(data.products);
+        const normalizedProducts = filters.category !== 'all'
+          ? data.products.filter((product) => product.category === filters.category)
+          : data.products;
+        setProducts(normalizedProducts);
         const totalFromApi =
           typeof data.total === 'number'
             ? data.total
             : typeof data.count === 'number'
             ? data.count
             : data.products.length;
-        setTotalProducts(totalFromApi);
+        setTotalProducts(filters.category !== 'all' ? normalizedProducts.length : totalFromApi);
         if (typeof data.page === 'number' && data.page !== currentPage) {
           setCurrentPage(data.page);
         }
@@ -77,10 +69,6 @@ const Products = () => {
       setLoading(false);
     }
   }, [filters, itemsPerPage, currentPage]);
-
-  useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
 
   useEffect(() => {
     loadProducts();
@@ -139,9 +127,9 @@ const Products = () => {
                 >
                   All Products
                 </div>
-                {categories.map((cat) => (
+                {FIXED_CATEGORIES.map((cat) => (
                   <div
-                    key={cat._id}
+                    key={cat.id}
                     className={`category-item ${filters.category === cat.slug ? 'active' : ''}`}
                     onClick={() => handleCategoryChange(cat.slug)}
                   >

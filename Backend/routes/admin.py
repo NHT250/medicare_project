@@ -11,6 +11,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from flask import Blueprint, current_app, jsonify, request
 
+from constants.categories import ALLOWED_CATEGORY_SLUGS
 from utils.auth import admin_required, token_required
 from utils.helpers import (
     build_paginated_response,
@@ -88,6 +89,8 @@ def _validate_product_payload(data: dict[str, Any], for_update: bool = False) ->
         category = (data.get("category") or "").strip()
         if not category:
             errors.append("Category is required")
+        elif category not in ALLOWED_CATEGORY_SLUGS:
+            errors.append("Category must be one of the allowed options")
         payload["category"] = category
 
     if "price" in data or not for_update:

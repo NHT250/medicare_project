@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import adminApi from "../api";
 import ImagePicker from "../components/ImagePicker";
+import { FIXED_CATEGORIES } from "../../constants/categories";
 
 const emptyProduct = {
   name: "",
@@ -101,6 +102,10 @@ const AdminProductEditor = ({ mode = "create" }) => {
     }
     if (!product.category.trim()) {
       alert("Category is required");
+      return false;
+    }
+    if (!FIXED_CATEGORIES.some((item) => item.slug === product.category)) {
+      alert("Please select a valid category");
       return false;
     }
     if (Number(product.price) < 0) {
@@ -259,12 +264,18 @@ const AdminProductEditor = ({ mode = "create" }) => {
                 </div>
                 <div className="col-md-6">
                   <label className="form-label">Category</label>
-                  <input
-                    type="text"
-                    className="form-control"
+                  <select
+                    className="form-select text-capitalize"
                     value={product.category}
                     onChange={(e) => handleFieldChange("category", e.target.value)}
-                  />
+                  >
+                    <option value="">Select a category</option>
+                    {FIXED_CATEGORIES.map((categoryOption) => (
+                      <option key={categoryOption.id} value={categoryOption.slug}>
+                        {categoryOption.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="col-md-3">
                   <label className="form-label">Price</label>
