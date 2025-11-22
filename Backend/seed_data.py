@@ -4,6 +4,8 @@ from pymongo import MongoClient
 from datetime import datetime
 import bcrypt
 
+from constants.categories import FIXED_CATEGORIES
+
 # Connect to MongoDB
 # For Local MongoDB:
 client = MongoClient('mongodb://localhost:27017/')
@@ -58,51 +60,30 @@ sample_users = [
     }
 ]
 
+CATEGORY_DESCRIPTIONS = {
+    'pain-relief': 'Medications for pain management',
+    'vitamins': 'Vitamin and mineral supplements',
+    'skin-care': 'Products for skin health',
+    'heart-health': 'Medications for cardiovascular health',
+    'mental-health': 'Medications for mental wellbeing',
+    'respiratory': 'Medications for breathing and lung health'
+}
+
+
+def build_sample_categories():
+    current_time = datetime.now()
+    return [
+        {
+            **category,
+            'description': CATEGORY_DESCRIPTIONS.get(category['slug'], ''),
+            'createdAt': current_time
+        }
+        for category in FIXED_CATEGORIES
+    ]
+
+
 # Sample Categories
-sample_categories = [
-    {
-        'name': 'Pain Relief',
-        'description': 'Medications for pain management',
-        'icon': 'fas fa-pills',
-        'slug': 'pain-relief',
-        'createdAt': datetime.now()
-    },
-    {
-        'name': 'Vitamins',
-        'description': 'Vitamin and mineral supplements',
-        'icon': 'fas fa-leaf',
-        'slug': 'vitamins',
-        'createdAt': datetime.now()
-    },
-    {
-        'name': 'Skin Care',
-        'description': 'Products for skin health',
-        'icon': 'fas fa-hand-sparkles',
-        'slug': 'skin-care',
-        'createdAt': datetime.now()
-    },
-    {
-        'name': 'Heart Health',
-        'description': 'Medications for cardiovascular health',
-        'icon': 'fas fa-heartbeat',
-        'slug': 'heart-health',
-        'createdAt': datetime.now()
-    },
-    {
-        'name': 'Mental Health',
-        'description': 'Medications for mental wellbeing',
-        'icon': 'fas fa-brain',
-        'slug': 'mental-health',
-        'createdAt': datetime.now()
-    },
-    {
-        'name': 'Respiratory',
-        'description': 'Medications for breathing and lung health',
-        'icon': 'fas fa-lungs',
-        'slug': 'respiratory',
-        'createdAt': datetime.now()
-    }
-]
+sample_categories = build_sample_categories()
 
 # Sample Products
 sample_products = [
