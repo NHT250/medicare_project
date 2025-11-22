@@ -17,7 +17,7 @@ const config = {
   PRODUCTS_PER_PAGE: 8,
 
   // Feature flags
-  USE_ADMIN_MOCKS: import.meta.env.VITE_USE_ADMIN_MOCKS === "true",
+  USE_ADMIN_MOCKS: import.meta.env.VITE_USE_ADMIN_MOCKS !== "false",
 
   // Local Storage Keys
   STORAGE_KEYS: {

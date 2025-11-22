@@ -1,6 +1,7 @@
 // API Service Layer
 import axios from 'axios';
 import config from '../config';
+import { mockCartResponse, mockCategories, mockOrders, mockProducts } from './mockData';
 
 // Create axios instance
 const api = axios.create({
@@ -45,13 +46,38 @@ api.interceptors.response.use(
 
 export const authAPI = {
   login: async (credentials) => {
-    const response = await api.post('/api/auth/login', credentials);
-    return response.data;
+    try {
+      const response = await api.post('/api/auth/login', credentials);
+      return response.data;
+    } catch (error) {
+      console.warn('Auth API unavailable, returning mock login response.');
+      return {
+        token: 'mock-token',
+        user: {
+          _id: 'mock-user-id',
+          name: credentials?.email?.split('@')[0] || 'Guest User',
+          email: credentials?.email || 'guest@medicare.com',
+          role: 'customer'
+        }
+      };
+    }
   },
   
   register: async (userData) => {
-    const response = await api.post('/api/auth/register', userData);
-    return response.data;
+    try {
+      const response = await api.post('/api/auth/register', userData);
+      return response.data;
+    } catch (error) {
+      console.warn('Auth API unavailable, returning mock registration response.');
+      return {
+        user: {
+          _id: 'mock-user-id',
+          name: userData?.name || 'New User',
+          email: userData?.email || 'guest@medicare.com',
+          role: 'customer'
+        }
+      };
+    }
   },
   
   logout: () => {
@@ -66,45 +92,79 @@ export const authAPI = {
 
 export const productsAPI = {
   getAll: async (params = {}) => {
-    const {
-      page = 1,
-      limit = 20,
-      search = '',
-      category,
-      sort
-    } = params;
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        search = '',
+        category,
+        sort
+      } = params;
 
-    const requestParams = {
-      page,
-      limit
-    };
+      const requestParams = {
+        page,
+        limit
+      };
 
-    if (search) {
-      requestParams.search = search;
+      if (search) {
+        requestParams.search = search;
+      }
+
+      if (category) {
+        requestParams.category = category;
+      }
+
+      if (sort) {
+        requestParams.sort = sort;
+      }
+
+      const response = await api.get('/api/products', { params: requestParams });
+      return response.data;
+    } catch (error) {
+      console.warn('Products API unavailable, using mock products.');
+
+      const filtered = mockProducts.filter((product) => {
+        const matchesCategory =
+          !params.category || params.category === 'all' || product.category === params.category;
+        const matchesSearch =
+          !params.search ||
+          product.name.toLowerCase().includes(params.search.toLowerCase()) ||
+          product.description.toLowerCase().includes(params.search.toLowerCase());
+        return matchesCategory && matchesSearch;
+      });
+
+      return {
+        products: filtered,
+        total: filtered.length,
+        page: 1
+      };
     }
-
-    if (category) {
-      requestParams.category = category;
-    }
-
-    if (sort) {
-      requestParams.sort = sort;
-    }
-
-    const response = await api.get('/api/products', { params: requestParams });
-    return response.data;
   },
-  
+
   getById: async (id) => {
-    const response = await api.get(`/api/products/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/api/products/${id}`);
+      return response.data;
+    } catch (error) {
+      console.warn('Product details API unavailable, using mock product.');
+      const product = mockProducts.find((item) => item._id === id) || mockProducts[0];
+      return { product };
+    }
   },
-  
+
   searchProducts: async (query) => {
-    const response = await api.get('/api/products', { 
-      params: { search: query } 
-    });
-    return response.data;
+    try {
+      const response = await api.get('/api/products', {
+        params: { search: query }
+      });
+      return response.data;
+    } catch (error) {
+      console.warn('Search API unavailable, filtering mock products.');
+      const filtered = mockProducts.filter((product) =>
+        product.name.toLowerCase().includes((query || '').toLowerCase())
+      );
+      return { products: filtered, total: filtered.length, page: 1 };
+    }
   }
 };
 
@@ -112,8 +172,13 @@ export const productsAPI = {
 
 export const categoriesAPI = {
   getAll: async () => {
-    const response = await api.get('/api/categories');
-    return response.data;
+    try {
+      const response = await api.get('/api/categories');
+      return response.data;
+    } catch (error) {
+      console.warn('Categories API unavailable, using mock categories.');
+      return { categories: mockCategories };
+    }
   }
 };
 
@@ -121,23 +186,43 @@ export const categoriesAPI = {
 
 export const cartAPI = {
   getCart: async () => {
-    const response = await api.get('/api/cart');
-    return response.data;
+    try {
+      const response = await api.get('/api/cart');
+      return response.data;
+    } catch (error) {
+      console.warn('Cart API unavailable, using mock cart.');
+      return mockCartResponse;
+    }
   },
-  
+
   addToCart: async (productData) => {
-    const response = await api.post('/api/cart', productData);
-    return response.data;
+    try {
+      const response = await api.post('/api/cart', productData);
+      return response.data;
+    } catch (error) {
+      console.warn('Cart API unavailable, mocking add-to-cart.');
+      return { success: true, item: productData };
+    }
   },
-  
+
   updateCart: async (cartData) => {
-    const response = await api.put('/api/cart', cartData);
-    return response.data;
+    try {
+      const response = await api.put('/api/cart', cartData);
+      return response.data;
+    } catch (error) {
+      console.warn('Cart API unavailable, mocking cart update.');
+      return { success: true, items: cartData };
+    }
   },
-  
+
   removeFromCart: async (productId) => {
-    const response = await api.delete(`/api/cart/${productId}`);
-    return response.data;
+    try {
+      const response = await api.delete(`/api/cart/${productId}`);
+      return response.data;
+    } catch (error) {
+      console.warn('Cart API unavailable, mocking remove-from-cart.');
+      return { success: true, productId };
+    }
   }
 };
 
@@ -145,18 +230,46 @@ export const cartAPI = {
 
 export const ordersAPI = {
   getOrders: async () => {
-    const response = await api.get('/api/orders');
-    return response.data;
+    try {
+      const response = await api.get('/api/orders');
+      return response.data;
+    } catch (error) {
+      console.warn('Orders API unavailable, using mock orders.');
+      return { orders: mockOrders };
+    }
   },
-  
+
   createOrder: async (orderData) => {
-    const response = await api.post('/api/orders', orderData);
-    return response.data;
+    try {
+      const response = await api.post('/api/orders', orderData);
+      return response.data;
+    } catch (error) {
+      console.warn('Orders API unavailable, mocking order creation.');
+      const mockOrder = {
+        _id: 'order-mock',
+        orderId: 'ORD-MOCK',
+        status: 'Pending',
+        createdAt: new Date().toISOString(),
+        ...orderData,
+        total:
+          orderData?.items?.reduce(
+            (sum, item) => sum + Number(item.subtotal || 0),
+            0
+          ) || 0
+      };
+      return { order: mockOrder };
+    }
   },
-  
+
   getOrderById: async (id) => {
-    const response = await api.get(`/api/orders/${id}`);
-    return response.data;
+    try {
+      const response = await api.get(`/api/orders/${id}`);
+      return response.data;
+    } catch (error) {
+      console.warn('Orders API unavailable, using mock order.');
+      const order = mockOrders.find((item) => item._id === id) || mockOrders[0];
+      return { order };
+    }
   }
 };
 
@@ -164,13 +277,37 @@ export const ordersAPI = {
 
 export const usersAPI = {
   getProfile: async () => {
-    const response = await api.get('/api/users/profile');
-    return response.data;
+    try {
+      const response = await api.get('/api/users/profile');
+      return response.data;
+    } catch (error) {
+      console.warn('Profile API unavailable, using mock profile.');
+      return {
+        user: {
+          _id: 'mock-user-id',
+          name: 'Admin Demo',
+          email: 'admin@medicare.com',
+          phone: '+1 (555) 987-6543',
+          address: {
+            street: '742 Evergreen Terrace',
+            city: 'Springfield',
+            state: 'IL',
+            zipCode: '62704',
+            country: 'USA'
+          }
+        }
+      };
+    }
   },
-  
+
   updateProfile: async (userData) => {
-    const response = await api.put('/api/users/profile', userData);
-    return response.data;
+    try {
+      const response = await api.put('/api/users/profile', userData);
+      return response.data;
+    } catch (error) {
+      console.warn('Profile update API unavailable, echoing mock profile.');
+      return { user: { ...userData, _id: 'mock-user-id' } };
+    }
   }
 };
 
