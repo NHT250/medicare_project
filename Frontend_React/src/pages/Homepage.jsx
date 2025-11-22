@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import TopBanner from "../components/TopBanner";
 import Navbar from "../components/Navbar";
-import HeroBannerSlider from "../components/HeroBannerSlider";
+import HeroSection from "../components/HeroSection";
 import Footer from "../components/Footer";
 import "./Homepage.css";
 
@@ -107,7 +107,7 @@ const Homepage = () => {
     <div className="homepage">
       <TopBanner />
       <Navbar />
-      <HeroBannerSlider />
+      <HeroSection />
 
       <section className="categories-section section-shell" id="categories">
         <div className="section-header text-center">
