@@ -15,7 +15,9 @@ const slides = [
     ],
     primaryCta: "Shop Medicines",
     secondaryCta: "Track Delivery Areas",
-    bgImage: "/images/banner-medical-specialist.jpg",
+    bgImage:
+      "https://sf-static.upanhlaylink.com/img/image_2025112222841506b5c8e1aabc996c198d35e999.jpg",
+    fallbackBg: "/images/hero-delivery.svg",
     primaryLink: "/products",
     secondaryLink: "/products?category=delivery",
   },
@@ -31,7 +33,9 @@ const slides = [
     ],
     primaryCta: "Consult a Pharmacist",
     secondaryCta: "Learn How It Works",
-    bgImage: "/images/banner-kid-help.jpg",
+    bgImage:
+      "https://sf-static.upanhlaylink.com/img/image_20251122dd19d301a0c000ade8ccb4a43f574845.jpg",
+    fallbackBg: "/images/hero-consultation.svg",
     primaryLink: "/products",
     secondaryLink: "/products",
   },
@@ -47,7 +51,9 @@ const slides = [
     ],
     primaryCta: "View This Week’s Deals",
     secondaryCta: "Browse All Products",
-    bgImage: "/images/banner-world-health-day.jpg",
+    bgImage:
+      "https://sf-static.upanhlaylink.com/img/image_20251122bd43699a15f567fd71e2090a77df0893.jpg",
+    fallbackBg: "/images/hero-deals.svg",
     primaryLink: "/products",
     secondaryLink: "/products",
   },
@@ -63,7 +69,9 @@ const slides = [
     ],
     primaryCta: "Manage My Prescriptions",
     secondaryCta: "See Chronic Care Products",
-    bgImage: "/images/banner-medical-support.jpg",
+    bgImage:
+      "https://sf-static.upanhlaylink.com/img/image_20251122af49eb50047f8bbafae718b99aca7a65.jpg",
+    fallbackBg: "/images/hero-chronic.svg",
     primaryLink: "/products",
     secondaryLink: "/products",
   },
@@ -79,7 +87,9 @@ const slides = [
     ],
     primaryCta: "Shop Family Essentials",
     secondaryCta: "Browse Kids’ Products",
-    bgImage: "/images/banner-medical-services-trust.jpg",
+    bgImage:
+      "https://sf-static.upanhlaylink.com/img/image_20251122c9e1aa99c57f0aa2ac1b25e799a66533.jpg",
+    fallbackBg: "/images/hero-family.svg",
     primaryLink: "/products",
     secondaryLink: "/products?category=family",
   },
@@ -117,7 +127,15 @@ const HeroCarousel = () => {
             <div
               key={slide.label}
               className={`hero-slide ${isActive ? "hero-slide--active" : "hero-slide--hidden"}`}
-              style={{ backgroundImage: `url(${slide.bgImage})` }}
+              style={{
+                backgroundImage: slide.fallbackBg
+                  ? `url(${slide.bgImage}), url(${slide.fallbackBg})`
+                  : `url(${slide.bgImage})`,
+              }}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={slide.label}
+              aria-hidden={!isActive}
             >
               <div className="hero-slide-overlay">
                 <div className="hero-slide-content">
