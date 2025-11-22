@@ -3,46 +3,27 @@ import "./HeroBannerSlider.css";
 
 const slides = [
   {
-    id: "slide-1",
-    image: "/images/banner-medical-specialist.jpg",
-    alt: "Medical specialist 24/7 banner",
-  },
-  {
-    id: "slide-2",
-    image: "/images/banner-kid-help.jpg",
-    alt: "Pediatric care and ECG banner",
-  },
-  {
-    id: "slide-3",
-    image: "/images/banner-world-health-day.jpg",
-    alt: "World Health Day advice banner",
-  },
-  {
-    id: "slide-4",
-    image: "/images/banner-medical-support.jpg",
-    alt: "Medical support and protection banner",
-  },
-  {
-    id: "slide-5",
-    image: "/images/banner-medical-services-trust.jpg",
-    alt: "Trusted medical services banner",
+    id: "hero-main",
+    image: "/mnt/data/c7e8934a-2533-4e61-a6dc-95f82c047138.png",
+    fallbackImage: "/images/hero-fullscreen-fallback.svg",
+    alt: "Modern healthcare banner",
   },
 ];
+
+const AUTO_PLAY_DELAY = 5000;
 
 const HeroBannerSlider = () => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    if (slides.length <= 1) return undefined;
+
+    const timer = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    }, AUTO_PLAY_DELAY);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, []);
-
-  const goToSlide = (index) => {
-    setActiveIndex(index);
-  };
 
   const handlePrev = () => {
     setActiveIndex((prev) => (prev - 1 + slides.length) % slides.length);
@@ -52,53 +33,64 @@ const HeroBannerSlider = () => {
     setActiveIndex((prev) => (prev + 1) % slides.length);
   };
 
+  const goToSlide = (index) => setActiveIndex(index);
+
   return (
-    <section className="hero-banner-section">
-      <div className="container">
-        <div className="hero-banner-wrapper position-relative">
-          {slides.map((slide, index) => (
+    <section className="hero-full" aria-label="Hero banner">
+      <div className="hero-stage">
+        {slides.map((slide, index) => {
+          const backgroundImage = [slide.image, slide.fallbackImage]
+            .filter(Boolean)
+            .map((url) => `url(${url})`)
+            .join(", ");
+
+          return (
             <div
               key={slide.id}
-              className={`hero-banner-slide ${
-                index === activeIndex ? "hero-banner-slide--active" : "hero-banner-slide--hidden"
+              className={`hero-slide ${
+                index === activeIndex ? "hero-slide-active" : "hero-slide-hidden"
               }`}
-              style={{ backgroundImage: `url(${slide.image})` }}
-              aria-hidden={index !== activeIndex}
+              style={{ backgroundImage }}
+              role="img"
+              aria-label={slide.alt}
             >
-              <div className="hero-banner-overlay" aria-hidden="true"></div>
-              <span className="visually-hidden">{slide.alt}</span>
+              <div className="hero-slide-backdrop" aria-hidden="true" />
             </div>
+          );
+        })}
+
+        {slides.length > 1 && (
+          <>
+            <button
+              type="button"
+              className="hero-arrow hero-arrow-left"
+              aria-label="Previous slide"
+              onClick={handlePrev}
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="hero-arrow hero-arrow-right"
+              aria-label="Next slide"
+              onClick={handleNext}
+            >
+              ›
+            </button>
+          </>
+        )}
+
+        <div className="hero-dots" aria-label="Slide pagination">
+          {slides.map((slide, index) => (
+            <button
+              key={slide.id}
+              type="button"
+              className={`hero-dot ${index === activeIndex ? "hero-dot-active" : ""}`}
+              aria-label={`Go to slide ${index + 1}`}
+              aria-pressed={index === activeIndex}
+              onClick={() => goToSlide(index)}
+            />
           ))}
-
-          <button
-            type="button"
-            className="hero-banner-nav hero-banner-nav--prev"
-            aria-label="Previous slide"
-            onClick={handlePrev}
-          >
-            ‹
-          </button>
-          <button
-            type="button"
-            className="hero-banner-nav hero-banner-nav--next"
-            aria-label="Next slide"
-            onClick={handleNext}
-          >
-            ›
-          </button>
-
-          <div className="hero-banner-dots">
-            {slides.map((slide, index) => (
-              <button
-                key={slide.id}
-                type="button"
-                className={`hero-banner-dot ${index === activeIndex ? "active" : ""}`}
-                aria-label={`Go to slide ${index + 1}`}
-                aria-pressed={index === activeIndex}
-                onClick={() => goToSlide(index)}
-              ></button>
-            ))}
-          </div>
         </div>
       </div>
     </section>

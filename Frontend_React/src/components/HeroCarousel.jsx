@@ -1,99 +1,51 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
 import "./HeroCarousel.css";
 
-const slides = [
-  {
-    label: "Fast Delivery",
-    title: "Get your medicines delivered fast & safely",
-    subtitle:
-      "Order prescription and OTC medicines online and receive them within hours at your doorstep.",
-    bullets: [
-      "🚚 Same-day delivery in selected areas",
-      "❄️ Safe & temperature-aware packaging",
-      "💳 Multiple secure payment methods",
-    ],
-    primaryCta: "Shop Medicines",
-    secondaryCta: "Track Delivery Areas",
-    bgImage: "/images/banner-medical-specialist.jpg",
-    primaryLink: "/products",
-    secondaryLink: "/products?category=delivery",
-  },
-  {
-    label: "Online Consultation",
-    title: "Chat with licensed pharmacists anytime",
-    subtitle:
-      "Get professional advice about dosage, side effects, and safe use before you buy.",
-    bullets: [
-      "👨‍⚕️ 24/7 pharmacist support",
-      "💬 Secure private consultations",
-      "📋 Help with prescriptions & refills",
-    ],
-    primaryCta: "Consult a Pharmacist",
-    secondaryCta: "Learn How It Works",
-    bgImage: "/images/banner-kid-help.jpg",
-    primaryLink: "/products",
-    secondaryLink: "/products",
-  },
-  {
-    label: "Weekly Deals",
-    title: "Save more with weekly health deals",
-    subtitle:
-      "Discover special offers on vitamins, skin care, and everyday health essentials.",
-    bullets: [
-      "💊 Bundles for daily health",
-      "🎁 Member-only discount codes",
-      "📅 New deals every week",
-    ],
-    primaryCta: "View This Week’s Deals",
-    secondaryCta: "Browse All Products",
-    bgImage: "/images/banner-world-health-day.jpg",
-    primaryLink: "/products",
-    secondaryLink: "/products",
-  },
-  {
-    label: "Chronic Care",
-    title: "Easy refills for chronic conditions",
-    subtitle:
-      "Manage long-term treatments like diabetes and hypertension with simple refills.",
-    bullets: [
-      "📆 Refill reminders for your meds",
-      "🩺 Support for common chronic conditions",
-      "📦 Repeat orders in one tap",
-    ],
-    primaryCta: "Manage My Prescriptions",
-    secondaryCta: "See Chronic Care Products",
-    bgImage: "/images/banner-medical-support.jpg",
-    primaryLink: "/products",
-    secondaryLink: "/products",
-  },
-  {
-    label: "Family & Kids",
-    title: "Health essentials for your whole family",
-    subtitle:
-      "From kids’ vitamins to family first-aid kits, keep everyone protected at home.",
-    bullets: [
-      "👨‍👩‍👧 Products for adults & children",
-      "🧸 Gentle & kid-friendly options",
-      "🧰 Home first-aid and basic care",
-    ],
-    primaryCta: "Shop Family Essentials",
-    secondaryCta: "Browse Kids’ Products",
-    bgImage: "/images/banner-medical-services-trust.jpg",
-    primaryLink: "/products",
-    secondaryLink: "/products?category=family",
-  },
-];
-
 const HeroCarousel = () => {
+  const slides = useMemo(
+    () => [
+      {
+        id: 1,
+        title: "Chăm sóc sức khỏe toàn diện",
+        description: "Dịch vụ y tế và dược phẩm giao tận nơi, tiện lợi cho cả gia đình.",
+        image: "/images/banner-1.jpg",
+      },
+      {
+        id: 2,
+        title: "Tư vấn dược sĩ 24/7",
+        description: "Nhận lời khuyên chuyên môn nhanh chóng mọi lúc khi bạn cần.",
+        image: "/images/banner-2.jpg",
+      },
+      {
+        id: 3,
+        title: "Ưu đãi hằng tuần",
+        description: "Tiết kiệm chi phí với nhiều chương trình khuyến mãi hấp dẫn.",
+        image: "/images/banner-3.jpg",
+      },
+      {
+        id: 4,
+        title: "Theo dõi đơn hàng dễ dàng",
+        description: "Cập nhật trạng thái giao hàng tức thì ngay trên ứng dụng.",
+        image: "/images/banner-4.jpg",
+      },
+      {
+        id: 5,
+        title: "Giải pháp cho mọi lứa tuổi",
+        description: "Sản phẩm phong phú cho trẻ em, người lớn và người cao tuổi.",
+        image: "/images/banner-5.jpg",
+      },
+    ],
+    []
+  );
+
   const [currentIndex, setCurrentIndex] = useState(0);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const intervalId = setInterval(() => {
       handleNext();
-    }, 6000);
-    return () => clearInterval(interval);
+    }, 5000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const handlePrev = () => {
@@ -109,60 +61,57 @@ const HeroCarousel = () => {
   };
 
   return (
-    <section className="hero-carousel">
-      <div className="hero-carousel-wrapper">
+    <section className="hero-wrapper" aria-roledescription="carousel">
+      <div className="hero-inner">
         {slides.map((slide, index) => {
           const isActive = index === currentIndex;
           return (
             <div
-              key={slide.label}
-              className={`hero-slide ${isActive ? "hero-slide--active" : "hero-slide--hidden"}`}
-              style={{ backgroundImage: `url(${slide.bgImage})` }}
+              key={slide.id}
+              className={`hero-slide ${isActive ? "hero-slide-active" : "hero-slide-hidden"}`}
+              style={{ backgroundImage: `url(${slide.image})` }}
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${index + 1} / ${slides.length}: ${slide.title}`}
+              aria-hidden={!isActive}
             >
-              <div className="hero-slide-overlay">
-                <div className="hero-slide-content">
-                  <p className="hero-slide-label">{slide.label}</p>
-                  <h1 className="hero-slide-title">{slide.title}</h1>
-                  <p className="hero-slide-subtitle">{slide.subtitle}</p>
-                  <ul className="hero-slide-bullets list-unstyled mb-4">
-                    {slide.bullets.map((bullet) => (
-                      <li key={bullet}>{bullet}</li>
-                    ))}
-                  </ul>
-                  <div className="d-flex flex-wrap gap-3">
-                    <button
-                      className="btn btn-primary btn-lg"
-                      onClick={() => navigate(slide.primaryLink)}
-                    >
-                      {slide.primaryCta}
-                    </button>
-                    <button
-                      className="btn btn-outline-light btn-lg"
-                      onClick={() => navigate(slide.secondaryLink)}
-                    >
-                      {slide.secondaryCta}
-                    </button>
-                  </div>
+              <div className="hero-overlay">
+                <div className="hero-content">
+                  <p className="hero-kicker">Medicare - Care for everyone</p>
+                  <h2 className="hero-title">{slide.title}</h2>
+                  <p className="hero-desc">{slide.description}</p>
                 </div>
               </div>
             </div>
           );
         })}
 
-        <button className="hero-nav hero-nav--prev" onClick={handlePrev} aria-label="Previous slide">
+        <button
+          className="hero-arrow hero-arrow-left"
+          onClick={handlePrev}
+          aria-label="Slide trước"
+          type="button"
+        >
           ‹
         </button>
-        <button className="hero-nav hero-nav--next" onClick={handleNext} aria-label="Next slide">
+        <button
+          className="hero-arrow hero-arrow-right"
+          onClick={handleNext}
+          aria-label="Slide tiếp theo"
+          type="button"
+        >
           ›
         </button>
 
-        <div className="hero-dots">
+        <div className="hero-dots" role="tablist" aria-label="Chọn slide">
           {slides.map((_, index) => (
             <button
               key={index}
-              className={`hero-dot ${index === currentIndex ? "active" : ""}`}
+              className={`hero-dot ${index === currentIndex ? "hero-dot-active" : ""}`}
               onClick={() => handleDotClick(index)}
-              aria-label={`Go to slide ${index + 1}`}
+              aria-label={`Slide ${index + 1}`}
+              aria-pressed={index === currentIndex}
+              type="button"
             ></button>
           ))}
         </div>
