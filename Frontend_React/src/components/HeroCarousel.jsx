@@ -15,7 +15,7 @@ const slides = [
     ],
     primaryCta: "Shop Medicines",
     secondaryCta: "Track Delivery Areas",
-    image: "/images/hero-delivery.svg",
+    bgImage: "/images/banner-medical-specialist.jpg",
     primaryLink: "/products",
     secondaryLink: "/products?category=delivery",
   },
@@ -31,7 +31,7 @@ const slides = [
     ],
     primaryCta: "Consult a Pharmacist",
     secondaryCta: "Learn How It Works",
-    image: "/images/hero-consultation.svg",
+    bgImage: "/images/banner-kid-help.jpg",
     primaryLink: "/products",
     secondaryLink: "/products",
   },
@@ -47,7 +47,7 @@ const slides = [
     ],
     primaryCta: "View This Week’s Deals",
     secondaryCta: "Browse All Products",
-    image: "/images/hero-deals.svg",
+    bgImage: "/images/banner-world-health-day.jpg",
     primaryLink: "/products",
     secondaryLink: "/products",
   },
@@ -63,7 +63,7 @@ const slides = [
     ],
     primaryCta: "Manage My Prescriptions",
     secondaryCta: "See Chronic Care Products",
-    image: "/images/hero-chronic.svg",
+    bgImage: "/images/banner-medical-support.jpg",
     primaryLink: "/products",
     secondaryLink: "/products",
   },
@@ -79,7 +79,7 @@ const slides = [
     ],
     primaryCta: "Shop Family Essentials",
     secondaryCta: "Browse Kids’ Products",
-    image: "/images/hero-family.svg",
+    bgImage: "/images/banner-medical-services-trust.jpg",
     primaryLink: "/products",
     secondaryLink: "/products?category=family",
   },
@@ -110,66 +110,57 @@ const HeroCarousel = () => {
 
   return (
     <section className="hero-carousel">
-      <div className="container-fluid position-relative">
-        {slides.map((slide, index) => (
-          <div
-            key={slide.label}
-            className={`hero-slide ${index === currentIndex ? "active" : ""}`}
-          >
-            <div className="row align-items-center g-4">
-              <div className="col-lg-6 order-2 order-lg-1">
-                <p className="slide-label">{slide.label}</p>
-                <h1 className="slide-title">{slide.title}</h1>
-                <p className="slide-subtitle">{slide.subtitle}</p>
-                <ul className="slide-bullets list-unstyled">
-                  {slide.bullets.map((bullet) => (
-                    <li key={bullet}>{bullet}</li>
-                  ))}
-                </ul>
-                <div className="d-flex flex-wrap gap-3">
-                  <button
-                    className="btn btn-primary btn-lg"
-                    onClick={() => navigate(slide.primaryLink)}
-                  >
-                    {slide.primaryCta}
-                  </button>
-                  <button
-                    className="btn btn-outline-primary btn-lg"
-                    onClick={() => navigate(slide.secondaryLink)}
-                  >
-                    {slide.secondaryCta}
-                  </button>
-                </div>
-              </div>
-              <div className="col-lg-6 order-1 order-lg-2">
-                <div className="hero-visual">
-                  <div className="badge-pill">{slide.label}</div>
-                  <img
-                    src={slide.image}
-                    alt={slide.label}
-                    className="img-fluid hero-image"
-                  />
-                  <div className="floating-icon pill">💊</div>
-                  <div className="floating-icon chat">💬</div>
-                  <div className="floating-icon bottle">🧴</div>
+      <div className="hero-carousel-wrapper">
+        {slides.map((slide, index) => {
+          const isActive = index === currentIndex;
+          return (
+            <div
+              key={slide.label}
+              className={`hero-slide ${isActive ? "hero-slide--active" : "hero-slide--hidden"}`}
+              style={{ backgroundImage: `url(${slide.bgImage})` }}
+            >
+              <div className="hero-slide-overlay">
+                <div className="hero-slide-content">
+                  <p className="hero-slide-label">{slide.label}</p>
+                  <h1 className="hero-slide-title">{slide.title}</h1>
+                  <p className="hero-slide-subtitle">{slide.subtitle}</p>
+                  <ul className="hero-slide-bullets list-unstyled mb-4">
+                    {slide.bullets.map((bullet) => (
+                      <li key={bullet}>{bullet}</li>
+                    ))}
+                  </ul>
+                  <div className="d-flex flex-wrap gap-3">
+                    <button
+                      className="btn btn-primary btn-lg"
+                      onClick={() => navigate(slide.primaryLink)}
+                    >
+                      {slide.primaryCta}
+                    </button>
+                    <button
+                      className="btn btn-outline-light btn-lg"
+                      onClick={() => navigate(slide.secondaryLink)}
+                    >
+                      {slide.secondaryCta}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
-        <button className="nav-arrow prev" onClick={handlePrev} aria-label="Previous slide">
+        <button className="hero-nav hero-nav--prev" onClick={handlePrev} aria-label="Previous slide">
           ‹
         </button>
-        <button className="nav-arrow next" onClick={handleNext} aria-label="Next slide">
+        <button className="hero-nav hero-nav--next" onClick={handleNext} aria-label="Next slide">
           ›
         </button>
 
-        <div className="carousel-dots">
+        <div className="hero-dots">
           {slides.map((_, index) => (
             <button
               key={index}
-              className={`dot ${index === currentIndex ? "active" : ""}`}
+              className={`hero-dot ${index === currentIndex ? "active" : ""}`}
               onClick={() => handleDotClick(index)}
               aria-label={`Go to slide ${index + 1}`}
             ></button>
