@@ -161,8 +161,8 @@ const Auth = () => {
       const result = await register(registerForm);
 
       if (result.success) {
-        alert("Registration successful! Please login to continue.");
-        setActiveTab("login");
+        alert("OTP sent! Please verify your email to complete registration.");
+        navigate("/verify-otp", { state: { email: registerForm.email } });
         setRegisterForm({
           name: "",
           email: "",
@@ -339,7 +339,13 @@ const Auth = () => {
 
                   <p className="switch-form">
                     Don't have an account?{" "}
-                    <a href="#" onClick={() => setActiveTab("register")}>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate("/register");
+                      }}
+                    >
                       Register here
                     </a>
                   </p>
