@@ -4,28 +4,38 @@ import "./HeroBannerSlider.css";
 const slides = [
   {
     id: "slide-1",
-    image: "/images/banner-medical-specialist.jpg",
-    alt: "Medical specialist 24/7 banner",
+    image:
+      "https://sf-static.upanhlaylink.com/img/image_2025112222841506b5c8e1aabc996c198d35e999.jpg",
+    fallbackImage: "/images/hero-delivery.svg",
+    alt: "Fast medical delivery banner",
   },
   {
     id: "slide-2",
-    image: "/images/banner-kid-help.jpg",
-    alt: "Pediatric care and ECG banner",
+    image:
+      "https://sf-static.upanhlaylink.com/img/image_20251122dd19d301a0c000ade8ccb4a43f574845.jpg",
+    fallbackImage: "/images/hero-consultation.svg",
+    alt: "Online medical consultation banner",
   },
   {
     id: "slide-3",
-    image: "/images/banner-world-health-day.jpg",
-    alt: "World Health Day advice banner",
+    image:
+      "https://sf-static.upanhlaylink.com/img/image_20251122bd43699a15f567fd71e2090a77df0893.jpg",
+    fallbackImage: "/images/hero-deals.svg",
+    alt: "Health deals and offers banner",
   },
   {
     id: "slide-4",
-    image: "/images/banner-medical-support.jpg",
-    alt: "Medical support and protection banner",
+    image:
+      "https://sf-static.upanhlaylink.com/img/image_20251122af49eb50047f8bbafae718b99aca7a65.jpg",
+    fallbackImage: "/images/hero-chronic.svg",
+    alt: "Chronic care support banner",
   },
   {
     id: "slide-5",
-    image: "/images/banner-medical-services-trust.jpg",
-    alt: "Trusted medical services banner",
+    image:
+      "https://sf-static.upanhlaylink.com/img/image_20251122c9e1aa99c57f0aa2ac1b25e799a66533.jpg",
+    fallbackImage: "/images/hero-family.svg",
+    alt: "Family and kids health banner",
   },
 ];
 
@@ -62,7 +72,11 @@ const HeroBannerSlider = () => {
               className={`hero-banner-slide ${
                 index === activeIndex ? "hero-banner-slide--active" : "hero-banner-slide--hidden"
               }`}
-              style={{ backgroundImage: `url(${slide.image})` }}
+              style={{
+                backgroundImage: slide.fallbackImage
+                  ? `url(${slide.image}), url(${slide.fallbackImage})`
+                  : `url(${slide.image})`,
+              }}
               aria-hidden={index !== activeIndex}
             >
               <div className="hero-banner-overlay" aria-hidden="true"></div>
