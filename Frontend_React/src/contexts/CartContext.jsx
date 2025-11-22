@@ -24,7 +24,9 @@ export const CartProvider = ({ children }) => {
     if (storedCart) {
       try {
         const cart = JSON.parse(storedCart);
-        setCartItems(cart);
+        if (Array.isArray(cart) && cart.length > 0) {
+          setCartItems(cart);
+        }
       } catch (error) {
         console.error("Error loading cart:", error);
       }
@@ -55,7 +57,7 @@ export const CartProvider = ({ children }) => {
         id: productId,
         _id: undefined // Remove _id to avoid confusion
       };
-      
+
       const existingItem = prevItems.find((item) => item.id === productId);
 
       if (existingItem) {

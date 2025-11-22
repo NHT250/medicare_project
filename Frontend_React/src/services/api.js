@@ -48,12 +48,12 @@ export const authAPI = {
     const response = await api.post('/api/auth/login', credentials);
     return response.data;
   },
-  
+
   register: async (userData) => {
     const response = await api.post('/api/auth/register', userData);
     return response.data;
   },
-  
+
   logout: () => {
     localStorage.removeItem('medicare_token');
     localStorage.removeItem('medicare_user');
@@ -94,15 +94,15 @@ export const productsAPI = {
     const response = await api.get('/api/products', { params: requestParams });
     return response.data;
   },
-  
+
   getById: async (id) => {
     const response = await api.get(`/api/products/${id}`);
     return response.data;
   },
-  
+
   searchProducts: async (query) => {
-    const response = await api.get('/api/products', { 
-      params: { search: query } 
+    const response = await api.get('/api/products', {
+      params: { search: query }
     });
     return response.data;
   }
@@ -124,17 +124,17 @@ export const cartAPI = {
     const response = await api.get('/api/cart');
     return response.data;
   },
-  
+
   addToCart: async (productData) => {
     const response = await api.post('/api/cart', productData);
     return response.data;
   },
-  
+
   updateCart: async (cartData) => {
     const response = await api.put('/api/cart', cartData);
     return response.data;
   },
-  
+
   removeFromCart: async (productId) => {
     const response = await api.delete(`/api/cart/${productId}`);
     return response.data;
@@ -148,12 +148,12 @@ export const ordersAPI = {
     const response = await api.get('/api/orders');
     return response.data;
   },
-  
+
   createOrder: async (orderData) => {
     const response = await api.post('/api/orders', orderData);
     return response.data;
   },
-  
+
   getOrderById: async (id) => {
     const response = await api.get(`/api/orders/${id}`);
     return response.data;
@@ -167,7 +167,7 @@ export const usersAPI = {
     const response = await api.get('/api/users/profile');
     return response.data;
   },
-  
+
   updateProfile: async (userData) => {
     const response = await api.put('/api/users/profile', userData);
     return response.data;
@@ -175,8 +175,3 @@ export const usersAPI = {
 };
 
 export default api;
-
-
-
-
-
