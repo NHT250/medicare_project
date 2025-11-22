@@ -62,7 +62,7 @@ export const authAPI = {
       };
     }
   },
-  
+
   register: async (userData) => {
     try {
       const response = await api.post('/api/auth/register', userData);
@@ -79,7 +79,7 @@ export const authAPI = {
       };
     }
   },
-  
+
   logout: () => {
     localStorage.removeItem('medicare_token');
     localStorage.removeItem('medicare_user');
@@ -153,18 +153,10 @@ export const productsAPI = {
   },
 
   searchProducts: async (query) => {
-    try {
-      const response = await api.get('/api/products', {
-        params: { search: query }
-      });
-      return response.data;
-    } catch (error) {
-      console.warn('Search API unavailable, filtering mock products.');
-      const filtered = mockProducts.filter((product) =>
-        product.name.toLowerCase().includes((query || '').toLowerCase())
-      );
-      return { products: filtered, total: filtered.length, page: 1 };
-    }
+    const response = await api.get('/api/products', {
+      params: { search: query }
+    });
+    return response.data;
   }
 };
 
@@ -312,8 +304,3 @@ export const usersAPI = {
 };
 
 export default api;
-
-
-
-
-

@@ -41,8 +41,6 @@ export const CartProvider = ({ children }) => {
         const cart = JSON.parse(storedCart);
         if (Array.isArray(cart) && cart.length > 0) {
           setCartItems(cart);
-        } else if (config.USE_ADMIN_MOCKS) {
-          seedMockCart();
         }
       } catch (error) {
         console.error("Error loading cart:", error);
@@ -79,7 +77,7 @@ export const CartProvider = ({ children }) => {
         id: productId,
         _id: undefined // Remove _id to avoid confusion
       };
-      
+
       const existingItem = prevItems.find((item) => item.id === productId);
 
       if (existingItem) {

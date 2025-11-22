@@ -1,62 +1,26 @@
 import api from "../services/api";
-import config from "../config";
-import mockAdminAPI from "./mockData";
 
-const useMockData = config.USE_ADMIN_MOCKS;
-
-const withMockFallback = async (networkCall, mockCall) => {
-  if (useMockData && typeof mockCall === "function") {
-    return mockCall();
-  }
-
-  try {
-    return await networkCall();
-  } catch (error) {
-    if (typeof mockCall === "function") {
-      console.warn("Admin API request failed, using mock data instead.", error);
-      return mockCall();
-    }
-    throw error;
-  }
+export const getDashboardSummary = async () => {
+  const response = await api.get("/api/admin/dashboard/summary");
+  return response.data;
 };
 
-export const getDashboardSummary = async () =>
-  withMockFallback(
-    async () => {
-      const response = await api.get("/api/admin/dashboard/summary");
-      return response.data;
-    },
-    () => mockAdminAPI.getDashboardSummary?.()
-  );
+export const getRecentOrders = async () => {
+  const response = await api.get("/api/admin/dashboard/recent-orders");
+  return response.data;
+};
 
-export const getRecentOrders = async () =>
-  withMockFallback(
-    async () => {
-      const response = await api.get("/api/admin/dashboard/recent-orders");
-      return response.data;
-    },
-    () => mockAdminAPI.getRecentOrders?.()
-  );
+export const getRecentUsers = async () => {
+  const response = await api.get("/api/admin/dashboard/recent-users");
+  return response.data;
+};
 
-export const getRecentUsers = async () =>
-  withMockFallback(
-    async () => {
-      const response = await api.get("/api/admin/dashboard/recent-users");
-      return response.data;
-    },
-    () => mockAdminAPI.getRecentUsers?.()
-  );
-
-export const getRevenue = async (range = "7d") =>
-  withMockFallback(
-    async () => {
-      const response = await api.get("/api/admin/dashboard/revenue", {
-        params: { range },
-      });
-      return response.data;
-    },
-    () => mockAdminAPI.getRevenueSeries?.(range)
-  );
+export const getRevenue = async (range = "7d") => {
+  const response = await api.get("/api/admin/dashboard/revenue", {
+    params: { range },
+  });
+  return response.data;
+};
 
 const dashboard = {
   summary: getDashboardSummary,
@@ -115,41 +79,25 @@ const users = {
   },
 };
 
-export const listOrders = async (params = {}) =>
-  withMockFallback(
-    async () => {
-      const response = await api.get("/api/admin/orders", { params });
-      return response.data;
-    },
-    () => mockAdminAPI.listOrders?.(params)
-  );
+export const listOrders = async (params = {}) => {
+  const response = await api.get("/api/admin/orders", { params });
+  return response.data;
+};
 
-export const getOrder = async (id) =>
-  withMockFallback(
-    async () => {
-      const response = await api.get(`/api/admin/orders/${id}`);
-      return response.data;
-    },
-    () => mockAdminAPI.getOrderDetail?.(id)
-  );
+export const getOrder = async (id) => {
+  const response = await api.get(`/api/admin/orders/${id}`);
+  return response.data;
+};
 
-export const updateOrderStatus = async (id, status) =>
-  withMockFallback(
-    async () => {
-      const response = await api.patch(`/api/admin/orders/${id}/status`, { status });
-      return response.data;
-    },
-    () => mockAdminAPI.updateOrderStatus?.(id, status)
-  );
+export const updateOrderStatus = async (id, status) => {
+  const response = await api.patch(`/api/admin/orders/${id}/status`, { status });
+  return response.data;
+};
 
-export const updateOrder = async (id, payload) =>
-  withMockFallback(
-    async () => {
-      const response = await api.patch(`/api/admin/orders/${id}`, payload);
-      return response.data;
-    },
-    () => mockAdminAPI.updateOrder?.(id, payload)
-  );
+export const updateOrder = async (id, payload) => {
+  const response = await api.patch(`/api/admin/orders/${id}`, payload);
+  return response.data;
+};
 
 const orders = {
   list: listOrders,

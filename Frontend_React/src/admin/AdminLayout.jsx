@@ -2,7 +2,6 @@ import React from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../contexts/AuthContext";
-import config from "../config";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -72,15 +71,6 @@ const AdminLayout = () => {
           </div>
         </header>
         <section className="p-4">
-          {config.USE_ADMIN_MOCKS && (
-            <div className="alert alert-warning d-flex align-items-center gap-2" role="alert">
-              <i className="fas fa-exclamation-triangle" aria-hidden="true" />
-              <span>
-                You are viewing demo data. Connect the production backend or disable
-                <code className="ms-1">VITE_USE_ADMIN_MOCKS</code> to use the live API.
-              </span>
-            </div>
-          )}
           <Outlet />
         </section>
       </main>

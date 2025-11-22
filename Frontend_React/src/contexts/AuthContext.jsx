@@ -40,27 +40,6 @@ export const AuthProvider = ({ children }) => {
         console.error("Error parsing user data:", error);
         logout();
       }
-    } else if (config.USE_ADMIN_MOCKS) {
-      const mockAdminUser = {
-        _id: "mock-admin-id",
-        name: "Admin Demo",
-        email: "admin@medicare.com",
-        role: "admin",
-        is_banned: false,
-      };
-
-      localStorage.setItem(
-        config.STORAGE_KEYS.USER,
-        JSON.stringify(mockAdminUser)
-      );
-      localStorage.setItem(config.STORAGE_KEYS.TOKEN, "mock-admin-token");
-      localStorage.setItem(config.STORAGE_KEYS.LOGGED_IN, "true");
-      localStorage.setItem(config.STORAGE_KEYS.ROLE, "admin");
-
-      setToken("mock-admin-token");
-      setUser(mockAdminUser);
-      setRole("admin");
-      setIsAuthenticated(true);
     }
     setLoading(false);
   }, []);
