@@ -295,7 +295,7 @@ def get_products():
         category = (request.args.get('category') or '').strip()
         sort_param = (request.args.get('sort') or 'newest').strip().lower()
 
-        query = {}
+        query = {'is_active': True}
         if category:
             query['category'] = category
         if search:
@@ -347,7 +347,9 @@ def get_products():
 @app.route('/api/products/<product_id>', methods=['GET'])
 def get_product(product_id):
     try:
-        product = db.products.find_one({'_id': ObjectId(product_id)})
+        product = db.products.find_one({'_id': ObjectId(product_id), 'is_active': True})
+        if not product:
+            return jsonify({'error': 'Product not found'}), 404
         return jsonify(serialize_doc(product))
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -389,44 +391,66 @@ def get_cart(current_user):
 def add_to_cart(current_user):
     try:
         user_id = str(current_user['_id'])
-        
+
+        data = request.get_json(force=True, silent=True) or {}
+        product_identifier = data.get('productId')
+        if not product_identifier:
+            return jsonify({'error': 'Product ID is required'}), 400
+
+        try:
+            product_object_id = ObjectId(product_identifier)
+        except (InvalidId, TypeError):
+            return jsonify({'error': 'Invalid product ID'}), 400
+
         # Get product
-        product = db.products.find_one({'_id': ObjectId(data['productId'])})
+        product = db.products.find_one({'_id': product_object_id, 'is_active': True})
         if not product:
             return jsonify({'error': 'Product not found'}), 404
-        
+
+        try:
+            quantity = int(data.get('quantity', 1))
+        except (TypeError, ValueError):
+            quantity = 0
+
+        if quantity < 1:
+            return jsonify({'error': 'Quantity must be at least 1'}), 400
+
+        available_stock = int(product.get('stock') or 0)
+        if available_stock < quantity:
+            return jsonify({'message': f"Out of stock for {product.get('name', 'product')}"}), 400
+
         # Get or create cart
         cart = db.carts.find_one({'userId': user_id})
-        
+
         if not cart:
             cart = {
                 'userId': user_id,
                 'items': [],
                 'total': 0,
-                'updatedAt': datetime.now()
+                'updatedAt': datetime.utcnow()
             }
             db.carts.insert_one(cart)
-        
+
         # Add or update item
         item_existing = False
         for item in cart['items']:
-            if item['productId'] == data['productId']:
-                item['quantity'] += data.get('quantity', 1)
+            if item['productId'] == str(product_object_id):
+                item['quantity'] += quantity
                 item['subtotal'] = item['quantity'] * item['price']
                 item_existing = True
                 break
-        
+
         if not item_existing:
             cart['items'].append({
                 'productId': str(product['_id']),
-                'quantity': data.get('quantity', 1),
+                'quantity': quantity,
                 'price': product['price'],
-                'subtotal': product['price'] * data.get('quantity', 1)
+                'subtotal': product['price'] * quantity
             })
         
         # Calculate total
         cart['total'] = sum(item['subtotal'] for item in cart['items'])
-        cart['updatedAt'] = datetime.now()
+        cart['updatedAt'] = datetime.utcnow()
         
         # Update cart
         db.carts.update_one({'_id': cart['_id']}, {'$set': cart})
