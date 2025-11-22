@@ -9,6 +9,45 @@ import Footer from "../components/Footer";
 import "../styles/Homepage.css";
 
 const Homepage = () => {
+  const FALLBACK_CATEGORIES = [
+    {
+      _id: "fallback-1",
+      name: "Pain Relief",
+      slug: "pain-relief",
+      icon: "fas fa-pills",
+    },
+    {
+      _id: "fallback-2",
+      name: "Vitamins",
+      slug: "vitamins",
+      icon: "fas fa-leaf",
+    },
+    {
+      _id: "fallback-3",
+      name: "Skin Care",
+      slug: "skin-care",
+      icon: "fas fa-hand-sparkles",
+    },
+    {
+      _id: "fallback-4",
+      name: "Heart Health",
+      slug: "heart-health",
+      icon: "fas fa-heartbeat",
+    },
+    {
+      _id: "fallback-5",
+      name: "Mental Health",
+      slug: "mental-health",
+      icon: "fas fa-brain",
+    },
+    {
+      _id: "fallback-6",
+      name: "Respiratory",
+      slug: "respiratory",
+      icon: "fas fa-lungs",
+    },
+  ];
+
   const navigate = useNavigate();
   useAuth();
   const { addToCart } = useCart();
@@ -27,8 +66,10 @@ const Homepage = () => {
 
       // Load categories
       const categoriesData = await categoriesAPI.getAll();
-      if (categoriesData.categories) {
+      if (categoriesData?.categories?.length) {
         setCategories(categoriesData.categories);
+      } else {
+        setCategories(FALLBACK_CATEGORIES);
       }
 
       // Load featured products
@@ -38,6 +79,7 @@ const Homepage = () => {
       }
     } catch (error) {
       console.error("Error loading data:", error);
+      setCategories(FALLBACK_CATEGORIES);
     } finally {
       setLoading(false);
     }
