@@ -29,15 +29,6 @@ const Checkout = () => {
     country: 'USA'
   });
 
-  // Payment form state
-  const [paymentInfo, setPaymentInfo] = useState({
-    method: 'card',
-    cardNumber: '',
-    cardName: '',
-    expiryDate: '',
-    cvv: ''
-  });
-
   // Calculate totals
   const shippingFee = 5.00;
   const tax = cartTotal * 0.08;
@@ -63,35 +54,13 @@ const Checkout = () => {
     });
   };
 
-  const handlePaymentChange = (e) => {
-    setPaymentInfo({
-      ...paymentInfo,
-      [e.target.name]: e.target.value
-    });
-  };
-
   const validateForm = () => {
     // Validate shipping info
     if (!shippingInfo.fullName || !shippingInfo.email || !shippingInfo.phone ||
-        !shippingInfo.address || !shippingInfo.city || !shippingInfo.state || 
+        !shippingInfo.address || !shippingInfo.city || !shippingInfo.state ||
         !shippingInfo.zipCode) {
       alert('Please fill in all shipping information');
       return false;
-    }
-
-    // Validate payment info
-    if (paymentInfo.method === 'card') {
-      if (!paymentInfo.cardNumber || !paymentInfo.cardName || 
-          !paymentInfo.expiryDate || !paymentInfo.cvv) {
-        alert('Please fill in all payment information');
-        return false;
-      }
-      
-      // Basic card number validation
-      if (paymentInfo.cardNumber.replace(/\s/g, '').length < 16) {
-        alert('Please enter a valid card number');
-        return false;
-      }
     }
 
     return true;
@@ -118,9 +87,7 @@ const Checkout = () => {
         })),
         shipping: shippingInfo,
         payment: {
-          method: paymentInfo.method,
-          // Don't send sensitive card info to backend in production
-          last4: paymentInfo.cardNumber.slice(-4)
+          method: 'COD'
         },
         subtotal: cartTotal,
         shippingFee: shippingFee,
@@ -286,109 +253,30 @@ const Checkout = () => {
               <div className="card mb-4">
                 <div className="card-header">
                   <h5 className="mb-0">
-                    <i className="fas fa-credit-card me-2"></i>
+                    <i className="fas fa-money-bill-wave me-2"></i>
                     Payment Information
                   </h5>
                 </div>
                 <div className="card-body">
-                  {/* Payment Method */}
-                  <div className="mb-3">
-                    <label className="form-label">Payment Method *</label>
-                    <div className="payment-methods">
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="method"
-                          value="card"
-                          checked={paymentInfo.method === 'card'}
-                          onChange={handlePaymentChange}
-                        />
-                        <label className="form-check-label">
-                          <i className="fas fa-credit-card me-2"></i>
-                          Credit/Debit Card
-                        </label>
-                      </div>
-                      <div className="form-check">
-                        <input
-                          className="form-check-input"
-                          type="radio"
-                          name="method"
-                          value="cod"
-                          checked={paymentInfo.method === 'cod'}
-                          onChange={handlePaymentChange}
-                        />
-                        <label className="form-check-label">
-                          <i className="fas fa-money-bill-wave me-2"></i>
-                          Cash on Delivery
-                        </label>
-                      </div>
-                    </div>
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="paymentMethod"
+                      id="paymentCod"
+                      checked
+                      readOnly
+                    />
+                    <label className="form-check-label" htmlFor="paymentCod">
+                      <i className="fas fa-money-bill-wave me-2"></i>
+                      Cash on Delivery
+                    </label>
                   </div>
-
-                  {/* Card Details (only if card payment) */}
-                  {paymentInfo.method === 'card' && (
-                    <>
-                      <div className="mb-3">
-                        <label className="form-label">Card Number *</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="cardNumber"
-                          value={paymentInfo.cardNumber}
-                          onChange={handlePaymentChange}
-                          placeholder="1234 5678 9012 3456"
-                          maxLength="19"
-                          required
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">Cardholder Name *</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="cardName"
-                          value={paymentInfo.cardName}
-                          onChange={handlePaymentChange}
-                          placeholder="John Doe"
-                          required
-                        />
-                      </div>
-
-                      <div className="row">
-                        <div className="col-md-6 mb-3">
-                          <label className="form-label">Expiry Date *</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="expiryDate"
-                            value={paymentInfo.expiryDate}
-                            onChange={handlePaymentChange}
-                            placeholder="MM/YY"
-                            maxLength="5"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-6 mb-3">
-                          <label className="form-label">CVV *</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="cvv"
-                            value={paymentInfo.cvv}
-                            onChange={handlePaymentChange}
-                            placeholder="123"
-                            maxLength="4"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  <p className="text-muted mt-2 mb-0">
+                    Bạn sẽ thanh toán trực tiếp cho nhân viên giao hàng khi nhận hàng (Cash on Delivery).
+                  </p>
                 </div>
               </div>
-
               {/* Place Order Button */}
               <button
                 type="submit"
@@ -461,25 +349,6 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* VNPAY QR Payment */}
-                <form
-                  action="http://localhost:3000/create-order"
-                  method="POST"
-                  className="mt-3"
-                >
-                  <input
-                    type="hidden"
-                    name="amount"
-                    value={Number(total.toFixed(2))}
-                  />
-                  <button type="submit" className="btn btn-primary w-100">
-                    <i className="fas fa-qrcode me-2"></i>
-                    Thanh toán bằng VNPAY QR
-                  </button>
-                  <small className="text-muted d-block mt-2">
-                    Bấm để được chuyển sang trang thanh toán VNPAY QR demo.
-                  </small>
-                </form>
               </div>
             </div>
           </div>
