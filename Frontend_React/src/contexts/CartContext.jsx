@@ -1,6 +1,7 @@
 // Cart Context for managing shopping cart state
 import React, { createContext, useContext, useState, useEffect } from "react";
 import config from "../config";
+import { mockCartResponse } from "../services/mockData";
 
 const CartContext = createContext(null);
 
@@ -20,6 +21,20 @@ export const CartProvider = ({ children }) => {
 
   // Load cart from localStorage on mount
   useEffect(() => {
+    const seedMockCart = () => {
+      const seededCart = (mockCartResponse.items || []).map((item) => ({
+        ...item,
+        id: item.productId || item.id || item.product_id,
+        quantity: item.quantity || 1,
+        price: Number(item.price || item.subtotal || 0),
+      }));
+      setCartItems(seededCart);
+      localStorage.setItem(
+        config.STORAGE_KEYS.CART,
+        JSON.stringify(seededCart)
+      );
+    };
+
     const storedCart = localStorage.getItem(config.STORAGE_KEYS.CART);
     if (storedCart) {
       try {
@@ -29,7 +44,12 @@ export const CartProvider = ({ children }) => {
         }
       } catch (error) {
         console.error("Error loading cart:", error);
+        if (config.USE_ADMIN_MOCKS) {
+          seedMockCart();
+        }
       }
+    } else if (config.USE_ADMIN_MOCKS) {
+      seedMockCart();
     }
   }, []);
 
